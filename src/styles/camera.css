@@ -1,0 +1,321 @@
+/* ============================================
+   Camera Page Styles
+   ============================================ */
+
+.camera-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* --- Camera Header --- */
+.camera-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.camera-header-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* --- Camera Viewport --- */
+.camera-viewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  position: relative;
+}
+
+.camera-preview-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 4/3;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--glass-border);
+}
+
+.camera-preview-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror front camera */
+}
+
+.camera-preview-wrapper canvas {
+  display: none;
+}
+
+/* --- Camera guides / overlay --- */
+.camera-guide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.camera-guide-corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-color: var(--accent);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.5;
+}
+
+.camera-guide-corner.tl {
+  top: 16px; left: 16px;
+  border-top-width: 2px; border-left-width: 2px;
+  border-top-left-radius: var(--radius-lg);
+}
+.camera-guide-corner.tr {
+  top: 16px; right: 16px;
+  border-top-width: 2px; border-right-width: 2px;
+  border-top-right-radius: var(--radius-lg);
+}
+.camera-guide-corner.bl {
+  bottom: 16px; left: 16px;
+  border-bottom-width: 2px; border-left-width: 2px;
+  border-bottom-left-radius: var(--radius-lg);
+}
+.camera-guide-corner.br {
+  bottom: 16px; right: 16px;
+  border-bottom-width: 2px; border-right-width: 2px;
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+/* --- Countdown overlay --- */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast);
+}
+
+.countdown-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.countdown-number {
+  font-family: var(--font-display);
+  font-size: 120px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 0 40px var(--accent-glow);
+  animation: countdownPulse 1s var(--ease-out) both;
+}
+
+/* --- Shutter flash --- */
+.shutter-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shutter-flash.active {
+  animation: shutterFlash 0.3s var(--ease-out) both;
+}
+
+/* --- Camera Controls --- */
+.camera-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-6);
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.capture-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-out);
+  box-shadow: var(--shadow-glow);
+}
+
+.capture-btn::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all var(--duration-base) var(--ease-out);
+}
+
+.capture-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-glow-lg);
+}
+
+.capture-btn:active {
+  transform: scale(0.95);
+}
+
+.capture-btn:active::before {
+  inset: 8px;
+}
+
+.control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-out);
+  color: var(--text-secondary);
+}
+
+.control-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.control-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- Shot counter --- */
+.shot-counter {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--accent);
+  z-index: 3;
+}
+
+/* --- Camera Permissions --- */
+.camera-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.camera-permission svg {
+  width: 64px;
+  height: 64px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.camera-permission h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.camera-permission p {
+  color: var(--text-secondary);
+  max-width: 360px;
+}
+
+/* --- Photo strip preview (multi-shot) --- */
+.photo-strip-preview {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  position: absolute;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.photo-strip-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--glass-border);
+  background: var(--bg-surface-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-strip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-strip-thumb.empty {
+  border-style: dashed;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.photo-strip-thumb.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-dim);
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+  .camera-preview-wrapper {
+    aspect-ratio: 3/4;
+    border-radius: var(--radius-xl);
+  }
+  
+  .camera-controls {
+    padding: var(--space-6) var(--space-4);
+  }
+  
+  .capture-btn {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .camera-preview-wrapper {
+    max-width: 800px;
+  }
+}

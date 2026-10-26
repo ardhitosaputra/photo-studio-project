@@ -1,0 +1,79 @@
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  #app {
+    min-height: auto !important;
+  }
+  
+  /* Hide everything except print content */
+  .app-header,
+  .editor-toolbar,
+  .editor-panel,
+  .export-actions,
+  .export-header,
+  .layout-section,
+  #toast-container,
+  #modal-overlay,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+  
+  .export-preview,
+  .print-content {
+    display: block !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+  }
+  
+  .print-content img,
+  .print-content canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Photocard layouts */
+  .print-photocard {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10mm;
+  }
+  
+  .print-photocard.strip {
+    max-width: 60mm;
+    margin: 0 auto;
+  }
+  
+  .print-photocard.grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    max-width: 140mm;
+  }
+  
+  .print-photocard img {
+    width: 100%;
+    border-radius: 2mm;
+  }
+  
+  @page {
+    size: auto;
+    margin: 5mm;
+  }
+}
