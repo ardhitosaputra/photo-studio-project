@@ -9,6 +9,7 @@ import { initModal } from './components/modal.js';
 import { createHomePage } from './pages/home.js';
 import { createCameraPage } from './pages/camera.js';
 import { createEditorPage } from './pages/editor.js';
+import { createExportPage } from './pages/export.js';
 
 // Initialize core UI overlay components
 initToast();
@@ -18,6 +19,7 @@ initModal();
 router.route('home', createHomePage);
 router.route('camera', createCameraPage);
 router.route('editor', createEditorPage);
+router.route('export', createExportPage);
 
 // Mount router on #app container
 const appContainer = document.getElementById('app');
