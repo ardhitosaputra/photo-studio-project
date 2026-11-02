@@ -1,136 +1,162 @@
-# 🚀 Phase 1: Foundation & Camera Core Implementation
+# 🎨 Phase 2: Canvas Editor Engine (Filters, Stickers, Frames & Compositing)
 
-> **Milestone**: Phase 1 (Week 1 - 2)  
-> **Target**: Implementasi Fondasi, Entry Point, Web Audio SFX, Live Camera Capture & Fallback  
-> **Status**: ✅ **COMPLETED**  
+> **Milestone**: Phase 2 (Week 3 - 4)  
+> **Target**: Implementasi Canvas Editor Interaktif, 12 Filter Presets, Stiker Drag & Drop, Frame Overlays, Multi-Slot Selector, dan Compositing Engine  
+> **Status**: 🟡 **OPEN**  
 > **Assignee**: Programmer / AI Agent  
 
 ---
 
 ## 📌 Ringkasan Objektif
 
-Membuat alur aplikasi berfungsi penuh dari **Landing Page** (pemilihan mode single / strip / grid) hingga **Camera Capture** (tangkapan foto real-time dengan countdown, mirror, audio SFX, dan fallback upload), serta mengarahkan hasil tangkapan ke halaman **Editor Stub** tanpa error.
+Mentransformasikan halaman editor dari tampilan preview mentah menjadi **Studio Canvas Editor Interaktif** lengkap. Pengguna dapat:
+1. Memilih slot foto yang ingin diedit jika mengambil multi-shot (4 foto strip/grid).
+2. Memilih dan melihat pratinjau real-time dari **12 filter artistik**.
+3. Menambahkan **stiker dekoratif** dan memanipulasinya secara interaktif (*drag & drop*, *resize*, dan *delete*).
+4. Menerapkan **bingkai/frame tematik** (*Polaroid, Vintage, Neon, Minimalist, 35mm Film Strip, Gradient*).
+5. Menggabungkan (*flatten/composite*) seluruh layer foto, filter, stiker, dan bingkai menjadi satu file gambar beresolusi penuh saat menekan tombol **Done**, lalu berpindah ke halaman **Export**.
 
 ---
 
 ## 📋 Task Checklist & Spesifikasi Teknis
 
-### [x] Task 1.1: Integrasi Entry Point & Global Stylesheet
+### [ ] Task 2.1: Arsitektur State Editor & Multi-Slot Selector
 - **File Terkait**:
-  - `src/styles/index.css`
-  - `src/main.js`
+  - `src/pages/editor.js`
 - **Spesifikasi Pengerjaan**:
-  1. Pada `src/styles/index.css`, sertakan import seluruh modul styling:
-     ```css
-     @import './components.css';
-     @import './animations.css';
-     @import './home.css';
-     @import './camera.css';
-     @import './editor.css';
-     @import './export.css';
-     @import './print.css';
+  1. Kelola state editor per foto:
+     ```javascript
+     const editorState = {
+       photos: [/* array base64 string */],
+       activePhotoIndex: 0,
+       photoEdits: [
+         // objek edit tersimpan per slot foto:
+         { filter: 'none', frame: 'none', stickers: [] }
+       ]
+     };
      ```
-  2. Ganti konten default Vite di `src/main.js`:
-     - Import `src/styles/index.css`
-     - Import `router` dari `./router.js`
-     - Import `initToast` dari `./components/toast.js`
-     - Import `initModal` dari `./components/modal.js`
-     - Import `createHomePage` dari `./pages/home.js`
-     - Import `createCameraPage` dari `./pages/camera.js`
-     - Import `createEditorPage` dari `./pages/editor.js`
-     - Registrasi rute: `'home'`, `'camera'`, dan `'editor'`
-     - Jalankan `router.init(document.getElementById('app'))`
+  2. Untuk mode **Photo Strip** atau **2×2 Grid** (4 foto):
+     - Sediakan bilah pemilih thumbnail foto (*Photo Slot Selector*) di atas atau samping kanvas.
+     - Mengklik thumbnail berpindah ke foto tersebut tanpa menghilangkan hasil editan foto lainnya.
+     - Sediakan tombol pintas *"Apply Filter/Frame to All Photos"* untuk kemudahan pengguna.
 - **Kriteria Lolos Uji (Acceptance Criteria)**:
-  - Saat `npm run dev` dibuka di browser, muncul Landing Page Photo Studio bertema gelap (bukan template counter Vite).
-  - Mengklik tombol "Start Capturing" memicu transisi halaman ke kamera (`#camera`).
+  - Berpindah antar slot foto mempertahankan state filter, stiker, dan frame masing-masing slot.
 
 ---
 
-### [x] Task 1.2: Sintesis Audio Efek (Web Audio API)
+### [ ] Task 2.2: Filter Drawer & Live Thumbnail Preview (12 Preset)
 - **File Terkait**:
-  - `src/utils/audio.js` *(baru)*
-  - `src/pages/camera.js`
+  - `src/pages/editor.js`
+  - `src/utils/constants.js`
+  - `src/utils/canvas-utils.js`
 - **Spesifikasi Pengerjaan**:
-  Hindari ketergantungan file MP3 eksternal dengan membuat audio sintetis menggunakan `AudioContext`:
-  1. `playCountdownBeep()`: Frekuensi ~800Hz, durasi 100ms, volume fade-out halus.
-  2. `playShutterSound()`: White noise burst berdurasi 150ms dengan lowpass filter menyerupai shutter analog mekanik.
-  3. Hubungkan `playCountdownBeep()` pada setiap detik hitungan mundur (3, 2, 1) di `camera.js`.
-  4. Hubungkan `playShutterSound()` saat shutter flash terpicu di `camera.js`.
+  1. Tambahkan tab toolbar **"🎨 Filters"**.
+  2. Tampilkan panel drawer bawah berisi 12 filter preset (*Original, B&W, Sepia, Vintage, Warm, Cool, Dramatic, Fade, Noir, Vivid, Pastel, Retro*).
+  3. Render thumbnail preview mini menggunakan `createThumbnail(sourceCanvas, 64)` yang telah diberi filter CSS.
+  4. Klik pada filter langsung mengaplikasikan efek pada kanvas aktif secara real-time.
 - **Kriteria Lolos Uji**:
-  - Suara beep terdengar sinkron saat angka hitung mundur berubah.
-  - Suara jepretan kamera terdengar ketika frame ditangkap.
+  - Filter langsung ter-render pada kanvas utama saat thumbnail diklik.
+  - Filter aktif memiliki penanda visual (border warna aksen ungu/violet).
 
 ---
 
-### [x] Task 1.3: Lifecycle Kamera, Mirroring & Fallback Upload
+### [ ] Task 2.3: Stiker Drawer & Interaksi (Drag, Resize, Delete)
 - **File Terkait**:
-  - `src/pages/camera.js`
-- **Spesifikasi Pengerjaan**:
-  1. **Lifecycle Stream**: Hentikan semua video tracks (`stream.getTracks().forEach(t => t.stop())`) saat tombol "Back" diklik atau halaman di-unmount.
-  2. **Camera Flip**: Toggle antara `facingMode: 'user'` (kamera depan - cermin) dan `'environment'` (kamera belakang).
-  3. **Error & Fallback Handling**:
-     - Jika browser menolak akses kamera (`NotAllowedError`), sembunyikan video viewport dan tampilkan UI upload foto.
-     - Sediakan input file `<input type="file" accept="image/*">` yang mampu memuat foto pengguna ke canvas.
-- **Kriteria Lolos Uji**:
-  - Lampu webcam fisik mati saat kembali ke halaman home.
-  - Tombol flip kamera berfungsi beralih mode.
-  - Fitur upload foto bekerja lancar saat kamera tidak tersedia.
-
----
-
-### [x] Task 1.4: Multi-Shot Capture Mechanics (Mode Single, Strip, Grid)
-- **File Terkait**:
-  - `src/pages/camera.js`
+  - `src/pages/editor.js`
   - `src/utils/constants.js`
 - **Spesifikasi Pengerjaan**:
-  1. Mode **Single**: Mengambil 1 foto lalu langsung mengarahkan ke editor.
-  2. Mode **Strip / Grid**:
-     - Memerlukan 4 foto.
-     - Setiap foto yang diambil menampilkan thumbnail pada preview strip di bawah viewport.
-     - Counter menampilkan progres: `1 / 4`, `2 / 4`, dst.
-     - Setelah foto ke-4 selesai, otomatis navigasi ke router editor:
+  1. Tambahkan tab toolbar **"🏷️ Stickers"** dengan kategori tab: *Emoji*, *Props*, *Text*, dan *Decorative*.
+  2. Mengklik stiker pada drawer menambahkan objek stiker baru ke tengah kanvas:
+     ```javascript
+     {
+       id: 'stk_' + Date.now(),
+       content: '🕶️',
+       x: 50,  // persentase relatif (0 - 100%)
+       y: 50,
+       size: 54, // ukuran dalam piksel
+       rotation: 0
+     }
+     ```
+  3. Interaksi manipulasi stiker:
+     - **Drag & Drop**: Menggunakan Pointer Events (`pointerdown`, `pointermove`, `pointerup`) dengan batas area kanvas.
+     - **Resize Handle**: Pegangan kontrol di sudut stiker untuk membesarkan/mengecilkan ukuran stiker.
+     - **Delete Button**: Tombol silang merah (✕) di sudut atas stiker untuk menghapus stiker.
+     - **Touch Friendly**: Berfungsi lancar di perangkat mobile (layar sentuh) maupun mouse desktop.
+- **Kriteria Lolos Uji**:
+  - Stiker dapat digeser, diatur ukurannya, dan dihapus tanpa distorsi posisi saat viewport berubah.
+
+---
+
+### [ ] Task 2.4: Frame Drawer & Overlay Rendering
+- **File Terkait**:
+  - `src/pages/editor.js`
+  - `src/utils/constants.js`
+  - `src/utils/canvas-utils.js` (`drawFrame`)
+- **Spesifikasi Pengerjaan**:
+  1. Tambahkan tab toolbar **"🖼️ Frames"**.
+  2. Sediakan pilihan bingkai: *None*, *Polaroid*, *Vintage*, *Neon*, *Minimal*, *Film (35mm)*, dan *Gradient*.
+  3. Saat bingkai dipilih, panggil fungsi `drawFrame(canvas, frameId)` dari `canvas-utils.js` di layer kanvas.
+- **Kriteria Lolos Uji**:
+  - Bingkai terpasang presisi di tepian foto.
+  - Memilih *None* menghapus bingkai dan mengembalikan foto ke format border polos.
+
+---
+
+### [ ] Task 2.5: Render Pipeline & Compositing Flattening Engine
+- **File Terkait**:
+  - `src/pages/editor.js`
+  - `src/utils/canvas-utils.js`
+- **Spesifikasi Pengerjaan**:
+  1. Buat pipeline compositing resolusi penuh:
+     - Siapkan kanvas offscreen dengan resolusi asli gambar (misal 1280×960).
+     - Layer 1: Gambar foto dasar dengan filter CSS/Canvas.
+     - Layer 2: Render bingkai overlay jika frame dipilih.
+     - Layer 3: Render seluruh stiker sesuai koordinat persentase `(x, y)` dan skala ukuran.
+  2. Saat tombol **"Done / Selesai"** diklik:
+     - Lakukan flattening seluruh foto yang ada di state.
+     - Hasilkan array foto final dalam format Base64 DataURL / Blob.
+     - Navigasi ke rute export:
        ```javascript
-       router.navigate('editor', { photos: capturedPhotos, mode });
+       router.navigate('export', { finalPhotos, mode });
        ```
 - **Kriteria Lolos Uji**:
-  - Mode single menyimpan 1 foto format Base64 PNG.
-  - Mode strip dan grid menyimpan tepat 4 foto berurutan sebelum berpindah halaman.
+  - Hasil render final menggabungkan foto, filter, frame, dan stiker secara permanen dengan resolusi tinggi.
 
 ---
 
-### [x] Task 1.5: Halaman Editor Stub (Transisi Sementara)
+### [ ] Task 2.6: Halaman Stub Export (`src/pages/export.js`)
 - **File Terkait**:
-  - `src/pages/editor.js` *(baru)*
+  - `src/pages/export.js` *(baru)*
+  - `src/main.js`
 - **Spesifikasi Pengerjaan**:
-  Buat halaman stub sederhana agar alur tidak terputus:
-  1. Ambil data: `const { photos = [], mode } = router.getData()`.
-  2. Tampilkan grid pratinjau foto-foto yang baru saja ditangkap.
-  3. Tombol aksi:
-     - Tombol "Ambil Ulang" (`Retake`) $\rightarrow$ navigasi kembali ke `#camera`.
-     - Tombol "Selesai" (`Done`) $\rightarrow$ menampilkan notifikasi toast siap lanjut ke Phase 2.
+  1. Buat file `src/pages/export.js` yang menerima `{ finalPhotos = [], mode }` dari router.
+  2. Tampilkan kartu preview foto final hasil editan dan tombol navigasi kembali (*Back to Editor*).
+  3. Daftarkan rute `'export'` pada `src/main.js`.
 - **Kriteria Lolos Uji**:
-  - Setelah capture selesai, foto langsung tampil di halaman editor tanpa error 404 / halaman kosong.
+  - Menekan tombol "Done" di editor berhasil berpindah ke halaman `#export` tanpa error 404.
 
 ---
 
-### [x] Task 1.6: Build Verification
+### [ ] Task 2.7: Build Verification
 - Jalankan perintah:
   ```bash
   npm run build
   ```
 - **Kriteria Lolos Uji**:
-  - Build produksi Vite menghasilkan bundle `dist/` tanpa error atau modul unresolved.
+  - Build produksi Vite menghasilkan bundle `dist/` tanpa error sintaks atau modul unresolved.
 
 ---
 
-## 🤖 Prompt Instruksi untuk AI Agent / Programmer
+## 🤖 Prompt Instruksi untuk AI Agent / Programmer (Copy-Paste)
 
 ```markdown
-Implementasikan Phase 1 untuk project Photo Studio (Vite + Vanilla JS) sesuai dengan spesifikasi teknis berikut:
-1. Hubungkan semua stylesheet di `src/styles/index.css` dan perbarui `src/main.js` untuk menginisialisasi router, toast, modal, dan mendaftarkan halaman 'home', 'camera', serta 'editor'.
-2. Buat `src/utils/audio.js` menggunakan Web Audio API untuk efek suara countdown beep dan shutter snap, lalu integrasikan ke `src/pages/camera.js`.
-3. Sempurnakan `src/pages/camera.js` untuk menghentikan media track saat navigasi keluar, mendukung flip kamera depan/belakang, dan fallback upload gambar lokal.
-4. Dukung alur multi-shot (single 1 shot, strip/grid 4 shot berturut-turut) dengan indikator thumbnail progres.
-5. Buat halaman stub `src/pages/editor.js` untuk menampilkan preview foto hasil jepretan dan tombol ambil ulang (retake).
-6. Pastikan `npm run build` berjalan sukses 100%.
+Implementasikan Phase 2: Canvas Editor Engine untuk project Photo Studio (Vite + Vanilla JS) sesuai dengan spesifikasi teknis berikut:
+1. Rombak `src/pages/editor.js` menjadi studio canvas editor interaktif dengan bilah tab toolbar:
+   - "Filters": 12 preset filter dengan kartu preview mini dan live render.
+   - "Stickers": katalog stiker dengan tab kategori, mendukung drag-and-drop pointer, resize, dan tombol hapus (delete).
+   - "Frames": pilihan frame tematik (Polaroid, Vintage, Neon, Film, Minimal, Gradient) menggunakan fungsi drawFrame di canvas-utils.js.
+2. Jika mode multi-shot (4 foto), sediakan selector slot foto agar pengguna bisa mengedit foto 1 sampai 4 secara bergantian.
+3. Buat fungsi compositing offscreen canvas untuk menggabungkan (flatten) foto + filter + stiker + frame menjadi satu gambar final beresolusi tinggi saat tombol "Done" ditekan.
+4. Buat halaman stub `src/pages/export.js` untuk menerima hasil foto final dan daftarkan ke `src/main.js`.
+5. Pastikan `npm run build` berjalan sukses 100%.
 ```
