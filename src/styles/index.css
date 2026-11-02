@@ -2,6 +2,14 @@
    PHOTO STUDIO — Design System & Global Styles
    ============================================ */
 
+@import './components.css';
+@import './animations.css';
+@import './home.css';
+@import './camera.css';
+@import './editor.css';
+@import './export.css';
+@import './print.css';
+
 /* --- Design Tokens --- */
 :root {
   /* Colors */

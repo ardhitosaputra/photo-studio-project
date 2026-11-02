@@ -6,13 +6,15 @@ import { router } from '../router.js';
 import { icon } from '../utils/icons.js';
 import { showToast } from '../components/toast.js';
 import { CAPTURE_MODE, CAPTURE_CONFIG, CAMERA_DEFAULTS } from '../utils/constants.js';
+import { playCountdownBeep, playShutterSound, playSuccessSound } from '../utils/audio.js';
 
 let stream = null;
 let currentFacingMode = CAMERA_DEFAULTS.facingMode;
+let activeCountdownSeconds = CAMERA_DEFAULTS.countdown;
 
 export function createCameraPage(data = {}) {
   const mode = data.mode || CAPTURE_MODE.SINGLE;
-  const config = CAPTURE_CONFIG[mode];
+  const config = CAPTURE_CONFIG[mode] || CAPTURE_CONFIG[CAPTURE_MODE.SINGLE];
   const totalShots = config.shots;
   
   const capturedPhotos = [];
@@ -86,18 +88,18 @@ export function createCameraPage(data = {}) {
         <button class="btn btn-secondary" id="btn-upload-photo" style="margin-top: 8px;">
           ${icon('upload', 18)} Upload Photo
         </button>
-        <input type="file" id="file-upload-input" accept="image/*" style="display:none;" />
       </div>
+      <input type="file" id="file-upload-input" accept="image/*" multiple style="display:none;" />
     </div>
 
     <!-- Controls -->
     <div class="camera-controls" id="camera-controls">
-      <button class="control-btn" id="btn-timer" title="Timer">
+      <button class="control-btn" id="btn-timer" title="Toggle Timer (${activeCountdownSeconds}s)">
         ${icon('timer', 20)}
       </button>
       <button class="capture-btn ripple" id="btn-capture" title="Capture">
       </button>
-      <button class="control-btn" id="btn-gallery" title="Upload Photo">
+      <button class="control-btn" id="btn-gallery" title="Upload Photos">
         ${icon('image', 20)}
       </button>
     </div>
@@ -114,6 +116,7 @@ export function createCameraPage(data = {}) {
     const countdownOverlay = page.querySelector('#countdown-overlay');
     const countdownNumber = page.querySelector('#countdown-number');
     const fileInput = page.querySelector('#file-upload-input');
+    const timerBtn = page.querySelector('#btn-timer');
 
     // Start camera
     startCamera(video, wrapper, permissionView, controls);
@@ -127,7 +130,21 @@ export function createCameraPage(data = {}) {
     // Flip camera
     page.querySelector('#btn-flip').addEventListener('click', () => {
       currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      video.style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'none';
       startCamera(video, wrapper, permissionView, controls);
+    });
+
+    // Timer button toggle (3s -> 5s -> 0s -> 3s)
+    timerBtn.addEventListener('click', () => {
+      if (activeCountdownSeconds === 3) {
+        activeCountdownSeconds = 5;
+      } else if (activeCountdownSeconds === 5) {
+        activeCountdownSeconds = 0;
+      } else {
+        activeCountdownSeconds = 3;
+      }
+      timerBtn.title = `Toggle Timer (${activeCountdownSeconds}s)`;
+      showToast(`Timer set to: ${activeCountdownSeconds ? activeCountdownSeconds + ' seconds' : 'Instant (No timer)'}`, 'info', 2000);
     });
 
     // Retry camera
@@ -145,35 +162,31 @@ export function createCameraPage(data = {}) {
     setupUpload('#btn-upload-photo');
     setupUpload('#btn-gallery');
 
-    // File upload handler
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = () => {
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          
-          const dataUrl = canvas.toDataURL('image/png');
-          capturedPhotos.push(dataUrl);
-          
-          if (capturedPhotos.length >= totalShots) {
-            stopCamera();
-            router.navigate('editor', { photos: capturedPhotos, mode });
-          } else {
-            updateStripPreview(page, capturedPhotos, totalShots);
-            showToast(`Photo ${capturedPhotos.length}/${totalShots} captured!`, 'success');
-          }
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
+    // File upload handler (supports multiple files for strip/grid)
+    fileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+
+      for (const file of files) {
+        if (capturedPhotos.length >= totalShots) break;
+
+        const dataUrl = await readFileAsDataURL(file);
+        capturedPhotos.push(dataUrl);
+        updateStripPreview(page, capturedPhotos, totalShots);
+      }
+
       fileInput.value = '';
+
+      if (capturedPhotos.length >= totalShots) {
+        playSuccessSound();
+        showToast('All photos uploaded successfully!', 'success');
+        setTimeout(() => {
+          stopCamera();
+          router.navigate('editor', { photos: capturedPhotos, mode });
+        }, 500);
+      } else {
+        showToast(`Uploaded ${capturedPhotos.length}/${totalShots} photos — ${totalShots - capturedPhotos.length} remaining`, 'info');
+      }
     });
 
     // Capture button
@@ -181,16 +194,21 @@ export function createCameraPage(data = {}) {
       if (isCapturing) return;
       isCapturing = true;
       
-      // Countdown
-      await runCountdown(countdownOverlay, countdownNumber);
+      // Countdown if timer > 0
+      if (activeCountdownSeconds > 0) {
+        await runCountdown(countdownOverlay, countdownNumber, activeCountdownSeconds);
+      }
       
-      // Flash
+      // Shutter sound & flash
+      playShutterSound();
       flash.classList.add('active');
       setTimeout(() => flash.classList.remove('active'), 300);
       
-      // Capture frame
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Capture frame from video or fallback canvas
+      const width = video.videoWidth || 1280;
+      const height = video.videoHeight || 960;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
       
       // Mirror if front camera
@@ -209,13 +227,14 @@ export function createCameraPage(data = {}) {
       
       if (capturedPhotos.length >= totalShots) {
         // All shots taken
+        playSuccessSound();
         showToast('All photos captured!', 'success');
         setTimeout(() => {
           stopCamera();
           router.navigate('editor', { photos: capturedPhotos, mode });
-        }, 500);
+        }, 600);
       } else {
-        showToast(`Photo ${capturedPhotos.length}/${totalShots} — ${totalShots - capturedPhotos.length} more`, 'info');
+        showToast(`Photo ${capturedPhotos.length}/${totalShots} captured! Next shot ready.`, 'info', 1800);
       }
       
       isCapturing = false;
@@ -230,7 +249,6 @@ export function createCameraPage(data = {}) {
  */
 async function startCamera(video, wrapper, permissionView, controls) {
   try {
-    // Stop existing stream
     if (stream) {
       stream.getTracks().forEach(t => t.stop());
     }
@@ -250,17 +268,17 @@ async function startCamera(video, wrapper, permissionView, controls) {
     controls.style.display = '';
     
   } catch (err) {
-    console.warn('Camera access denied:', err);
+    console.warn('Camera access denied or unavailable:', err);
     video.style.display = 'none';
     permissionView.style.display = 'flex';
-    showToast('Camera access denied. You can upload a photo instead.', 'warning');
+    showToast('Camera access unavailable. You can upload a photo instead.', 'warning', 4000);
   }
 }
 
 /**
  * Stop camera stream
  */
-function stopCamera() {
+export function stopCamera() {
   if (stream) {
     stream.getTracks().forEach(t => t.stop());
     stream = null;
@@ -268,11 +286,11 @@ function stopCamera() {
 }
 
 /**
- * Run countdown animation
+ * Run countdown animation with audio feedback
  */
-function runCountdown(overlay, numberEl) {
+function runCountdown(overlay, numberEl, seconds = 3) {
   return new Promise((resolve) => {
-    let count = CAMERA_DEFAULTS.countdown;
+    let count = seconds;
     overlay.classList.add('active');
     
     function tick() {
@@ -282,10 +300,13 @@ function runCountdown(overlay, numberEl) {
         return;
       }
       
+      // Play audio beep
+      playCountdownBeep(count === 1 ? 1200 : 880);
+
       numberEl.textContent = count;
       numberEl.style.animation = 'none';
       // Force reflow
-      numberEl.offsetHeight;
+      void numberEl.offsetHeight;
       numberEl.style.animation = 'countdownPulse 1s var(--ease-out) both';
       
       count--;
@@ -321,4 +342,15 @@ function updateStripPreview(page, photos, total) {
   if (counter) {
     counter.textContent = `${photos.length} / ${total}`;
   }
+}
+
+/**
+ * Helper to read File as DataURL
+ */
+function readFileAsDataURL(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
 }
