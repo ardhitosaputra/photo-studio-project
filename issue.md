@@ -1,143 +1,122 @@
-# 🎨 Phase 2: Canvas Editor Engine (Filters, Stickers, Frames & Compositing)
+# 📤 Phase 3: Export, Photocard Print & Google Drive Sync
 
-> **Milestone**: Phase 2 (Week 3 - 4)  
-> **Target**: Implementasi Canvas Editor Interaktif, 12 Filter Presets, Stiker Drag & Drop, Frame Overlays, Multi-Slot Selector, dan Compositing Engine  
-> **Status**: ✅ **COMPLETED**  
+> **Milestone**: Phase 3 (Week 5 - 6)  
+> **Target**: Photocard Canvas Layout Engine, Print Formatting, Social Media Sharing, Clipboard Copy & Google Drive Cloud Sync  
+> **Status**: 🟡 **OPEN**  
 > **Assignee**: Programmer / AI Agent  
 
 ---
 
 ## 📌 Ringkasan Objektif
 
-Mentransformasikan halaman editor dari tampilan preview mentah menjadi **Studio Canvas Editor Interaktif** lengkap. Pengguna dapat:
-1. Memilih slot foto yang ingin diedit jika mengambil multi-shot (4 foto strip/grid).
-2. Memilih dan melihat pratinjau real-time dari **12 filter artistik**.
-3. Menambahkan **stiker dekoratif** dan memanipulasinya secara interaktif (*drag & drop*, *resize*, dan *delete*).
-4. Menerapkan **bingkai/frame tematik** (*Polaroid, Vintage, Neon, Minimalist, 35mm Film Strip, Gradient*).
-5. Menggabungkan (*flatten/composite*) seluruh layer foto, filter, stiker, dan bingkai menjadi satu file gambar beresolusi penuh saat menekan tombol **Done**, lalu berpindah ke halaman **Export**.
+Mentransformasikan halaman hasil akhir (`export.js`) menjadi sistem distribusi dan pencetakan foto yang lengkap dan siap produksi:
+1. **Photocard Layout Canvas Generator**: Menggabungkan kumpulan foto hasil editan menjadi satu lembar photocard utuh (*vertical 4-cut strip*, *2×2 grid*, atau *single polaroid*) dengan pilihan warna kartu (*white, black, pink, blue, cream*) dan teks memo/timestamp kustom.
+2. **Download & Cetak Presisi**: Mengunduh satu file gambar photocard jadi (PNG resolusi tinggi) dan mencetak fisik secara proporsional via optimasi `@media print`.
+3. **Social Media Sharing**: Berbagi instan via native Web Share API (mobile), tombol *Copy Image to Clipboard*, serta modal share intent langsung ke WhatsApp, Twitter/X, dan Facebook.
+4. **Google Drive Cloud Sync**: Mengunggah photocard langsung ke Google Drive pengguna menggunakan Google Identity Services (GIS) & Google Drive API v3 secara client-side.
 
 ---
 
 ## 📋 Task Checklist & Spesifikasi Teknis
 
-### [x] Task 2.1: Arsitektur State Editor & Multi-Slot Selector
+### [ ] Task 3.1: Photocard Canvas Layout Engine
 - **File Terkait**:
-  - `src/pages/editor.js`
+  - `src/utils/photocard.js` *(baru)*
 - **Spesifikasi Pengerjaan**:
-  1. Kelola state editor per foto:
-     ```javascript
-     const editorState = {
-       photos: [/* array base64 string */],
-       activePhotoIndex: 0,
-       photoEdits: [
-         // objek edit tersimpan per slot foto:
-         { filter: 'none', frame: 'none', stickers: [] }
-       ]
-     };
-     ```
-  2. Untuk mode **Photo Strip** atau **2×2 Grid** (4 foto):
-     - Sediakan bilah pemilih thumbnail foto (*Photo Slot Selector*) di atas atau samping kanvas.
-     - Mengklik thumbnail berpindah ke foto tersebut tanpa menghilangkan hasil editan foto lainnya.
-     - Sediakan tombol pintas *"Apply Filter/Frame to All Photos"* untuk kemudahan pengguna.
+  Buat fungsi generator kanvas lembar photocard beresolusi tinggi:
+  1. **Mode Strip (Vertical 4-cut)**:
+     - Dimensi kanvas proporsional (1200 × 3600 px untuk rasio strip 1:3).
+     - Susun 4 foto secara vertikal berjarak rapi dengan margin tepi yang konsisten.
+     - Bagian footer memuat logo/branding *"✦ PHOTO STUDIO ✦"* dan tanggal otomatis (contoh: `2026.11.03`) atau teks memo pilihan pengguna.
+  2. **Mode Grid (2×2)**:
+     - Dimensi kanvas 2400 × 1800 px (rasio 4:3) dengan 4 foto terbagi rata 2 kolom × 2 baris.
+  3. **Mode Single Polaroid**:
+     - Format polaroid klasik dengan area bawah lebih lebar untuk catatan memo kustom.
+  4. **Pilihan Warna Kartu Photocard**:
+     - *Classic White* (`#ffffff`), *Midnight Black* (`#121212`), *Pastel Pink* (`#ffe4e6`), *Sky Blue* (`#e0f2fe`), dan *Vintage Cream* (`#fef3c7`).
 - **Kriteria Lolos Uji (Acceptance Criteria)**:
-  - Berpindah antar slot foto mempertahankan state filter, stiker, dan frame masing-masing slot.
+  - Menghasilkan satu string Base64 DataURL gambar photocard utuh beresolusi tinggi.
 
 ---
 
-### [x] Task 2.2: Filter Drawer & Live Thumbnail Preview (12 Preset)
+### [ ] Task 3.2: Antarmuka Kustomisasi Photocard & Preview Interaktif
 - **File Terkait**:
-  - `src/pages/editor.js`
-  - `src/utils/constants.js`
-  - `src/utils/canvas-utils.js`
+  - `src/pages/export.js`
+  - `src/styles/export.css`
 - **Spesifikasi Pengerjaan**:
-  1. Tambahkan tab toolbar **"🎨 Filters"**.
-  2. Tampilkan panel drawer bawah berisi 12 filter preset (*Original, B&W, Sepia, Vintage, Warm, Cool, Dramatic, Fade, Noir, Vivid, Pastel, Retro*).
-  3. Render thumbnail preview mini menggunakan `createThumbnail(sourceCanvas, 64)` yang telah diberi filter CSS.
-  4. Klik pada filter langsung mengaplikasikan efek pada kanvas aktif secara real-time.
+  1. Tampilkan canvas preview photocard interaktif di bagian tengah halaman.
+  2. Tambahkan panel kontrol kustomisasi:
+     - **Pilihan Warna Photocard**: Lingkaran palet warna (*White, Black, Pink, Blue, Cream*).
+     - **Input Teks Memo/Caption**: Kolom input teks opsional untuk menambahkan pesan singkat di photocard.
+  3. Tombol **"Download Photocard"**:
+     - Mengunduh file photocard utuh (`photocard-studio-[timestamp].png`).
+     - Sediakan tautan kecil alternatif: *"Download Individual Photos"* jika pengguna ingin mengunduh foto mentah satu per satu.
 - **Kriteria Lolos Uji**:
-  - Filter langsung ter-render pada kanvas utama saat thumbnail diklik.
-  - Filter aktif memiliki penanda visual (border warna aksen ungu/violet).
+  - Mengubah warna atau teks memo langsung memperbarui preview photocard secara instan.
+  - File yang terunduh adalah satu lembar photocard komplit, bukan foto terpisah.
 
 ---
 
-### [x] Task 2.3: Stiker Drawer & Interaksi (Drag, Resize, Delete)
+### [ ] Task 3.3: Optimasi Format Cetak Fisik (`@media print`)
 - **File Terkait**:
-  - `src/pages/editor.js`
-  - `src/utils/constants.js`
+  - `src/styles/print.css`
 - **Spesifikasi Pengerjaan**:
-  1. Tambahkan tab toolbar **"🏷️ Stickers"** dengan kategori tab: *Emoji*, *Props*, *Text*, dan *Decorative*.
-  2. Mengklik stiker pada drawer menambahkan objek stiker baru ke tengah kanvas:
-     ```javascript
-     {
-       id: 'stk_' + Date.now(),
-       content: '🕶️',
-       x: 50,  // persentase relatif (0 - 100%)
-       y: 50,
-       size: 54, // ukuran dalam piksel
-       rotation: 0
-     }
+  1. Di dalam `@media print`:
+     - Sembunyikan seluruh UI navigasi, tombol, header, dan pemilih warna (`.no-print`).
+     - Pusatkan kanvas photocard di tengah halaman cetak (`page-break-inside: avoid`).
+     - Set margin cetak halaman: `@page { margin: 0; size: auto; }`.
+  2. Tombol **"Print Photocard"** memanggil `window.print()`.
+- **Kriteria Lolos Uji**:
+  - Dialog print browser menampilkan kartu foto bersih di tengah tanpa elemen tombol web di sekelilingnya.
+
+---
+
+### [ ] Task 3.4: Modal Social Media Sharing & Clipboard API
+- **File Terkait**:
+  - `src/pages/export.js`
+  - `src/components/modal.js`
+- **Spesifikasi Pengerjaan**:
+  1. **Mobile Web Share API**:
+     - Cek `navigator.canShare && navigator.canShare({ files })`. Jika didukung, langsung panggil dialog share native ponsel.
+  2. **Desktop Fallback (Share Modal)**:
+     - Jika share file tidak didukung browser desktop, buka modal share dengan opsi:
+       - **Copy Image to Clipboard**: Menggunakan `navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])` sehingga pengguna bisa langsung *Ctrl+V* di WhatsApp Web, DM Instagram, atau Discord.
+       - **WhatsApp Direct**: Buka tautan `https://api.whatsapp.com/send?text=...`.
+       - **Twitter / X Direct**: Buka tautan `https://twitter.com/intent/tweet?text=...`.
+       - **Facebook Direct**: Buka tautan sharer Facebook.
+- **Kriteria Lolos Uji**:
+  - Tombol "Copy Image" berhasil menyalin binary foto ke clipboard dan memunculkan toast konfirmasi.
+  - Tautan WhatsApp / X terbuka di tab baru dengan teks pesan default.
+
+---
+
+### [ ] Task 3.5: Integrasi Google Drive Sync (Client-Side GIS & REST API v3)
+- **File Terkait**:
+  - `src/utils/drive.js` *(baru)*
+  - `index.html`
+  - `src/pages/export.js`
+- **Spesifikasi Pengerjaan**:
+  1. Di `index.html`, muat script Google Identity Services:
+     ```html
+     <script src="https://accounts.google.com/gsi/client" async defer></script>
      ```
-  3. Interaksi manipulasi stiker:
-     - **Drag & Drop**: Menggunakan Pointer Events (`pointerdown`, `pointermove`, `pointerup`) dengan batas area kanvas.
-     - **Resize Handle**: Pegangan kontrol di sudut stiker untuk membesarkan/mengecilkan ukuran stiker.
-     - **Delete Button**: Tombol silang merah (✕) di sudut atas stiker untuk menghapus stiker.
-     - **Touch Friendly**: Berfungsi lancar di perangkat mobile (layar sentuh) maupun mouse desktop.
+  2. **Inisialisasi Token Client**:
+     - Gunakan `google.accounts.oauth2.initTokenClient` dengan scope `https://www.googleapis.com/auth/drive.file`.
+  3. **Konfigurasi Client ID**:
+     - Simpan `google_client_id` di `localStorage`.
+     - Jika Client ID belum diisi oleh pengguna/developer, tampilkan modal pengaturan ringkas untuk memasukkan Client ID Google Cloud mereka (dengan petunjuk singkat).
+  4. **Unggah File ke Drive**:
+     - Konversi dataURL photocard ke Blob.
+     - Kirim request `multipart/related` POST ke `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart` berisi metadata nama file dan konten binary.
+  5. **Feedback UI**:
+     - Tampilkan animasi spinner loading saat proses upload berlangsung.
+     - Tampilkan notifikasi toast/modal sukses berisi tombol **"Open in Google Drive"** yang mengarah ke `https://drive.google.com/file/d/{fileId}/view`.
 - **Kriteria Lolos Uji**:
-  - Stiker dapat digeser, diatur ukurannya, dan dihapus tanpa distorsi posisi saat viewport berubah.
+  - Pengguna dapat login via popup Google, memilih akun, dan file berhasil masuk ke folder Google Drive mereka.
 
 ---
 
-### [x] Task 2.4: Frame Drawer & Overlay Rendering
-- **File Terkait**:
-  - `src/pages/editor.js`
-  - `src/utils/constants.js`
-  - `src/utils/canvas-utils.js` (`drawFrame`)
-- **Spesifikasi Pengerjaan**:
-  1. Tambahkan tab toolbar **"🖼️ Frames"**.
-  2. Sediakan pilihan bingkai: *None*, *Polaroid*, *Vintage*, *Neon*, *Minimal*, *Film (35mm)*, dan *Gradient*.
-  3. Saat bingkai dipilih, panggil fungsi `drawFrame(canvas, frameId)` dari `canvas-utils.js` di layer kanvas.
-- **Kriteria Lolos Uji**:
-  - Bingkai terpasang presisi di tepian foto.
-  - Memilih *None* menghapus bingkai dan mengembalikan foto ke format border polos.
-
----
-
-### [x] Task 2.5: Render Pipeline & Compositing Flattening Engine
-- **File Terkait**:
-  - `src/pages/editor.js`
-  - `src/utils/canvas-utils.js`
-- **Spesifikasi Pengerjaan**:
-  1. Buat pipeline compositing resolusi penuh:
-     - Siapkan kanvas offscreen dengan resolusi asli gambar (misal 1280×960).
-     - Layer 1: Gambar foto dasar dengan filter CSS/Canvas.
-     - Layer 2: Render bingkai overlay jika frame dipilih.
-     - Layer 3: Render seluruh stiker sesuai koordinat persentase `(x, y)` dan skala ukuran.
-  2. Saat tombol **"Done / Selesai"** diklik:
-     - Lakukan flattening seluruh foto yang ada di state.
-     - Hasilkan array foto final dalam format Base64 DataURL / Blob.
-     - Navigasi ke rute export:
-       ```javascript
-       router.navigate('export', { finalPhotos, mode });
-       ```
-- **Kriteria Lolos Uji**:
-  - Hasil render final menggabungkan foto, filter, frame, dan stiker secara permanen dengan resolusi tinggi.
-
----
-
-### [x] Task 2.6: Halaman Stub Export (`src/pages/export.js`)
-- **File Terkait**:
-  - `src/pages/export.js` *(baru)*
-  - `src/main.js`
-- **Spesifikasi Pengerjaan**:
-  1. Buat file `src/pages/export.js` yang menerima `{ finalPhotos = [], mode }` dari router.
-  2. Tampilkan kartu preview foto final hasil editan dan tombol navigasi kembali (*Back to Editor*).
-  3. Daftarkan rute `'export'` pada `src/main.js`.
-- **Kriteria Lolos Uji**:
-  - Menekan tombol "Done" di editor berhasil berpindah ke halaman `#export` tanpa error 404.
-
----
-
-### [x] Task 2.7: Build Verification
+### [ ] Task 3.6: Build Verification
 - Jalankan perintah:
   ```bash
   npm run build
@@ -150,13 +129,14 @@ Mentransformasikan halaman editor dari tampilan preview mentah menjadi **Studio 
 ## 🤖 Prompt Instruksi untuk AI Agent / Programmer (Copy-Paste)
 
 ```markdown
-Implementasikan Phase 2: Canvas Editor Engine untuk project Photo Studio (Vite + Vanilla JS) sesuai dengan spesifikasi teknis berikut:
-1. Rombak `src/pages/editor.js` menjadi studio canvas editor interaktif dengan bilah tab toolbar:
-   - "Filters": 12 preset filter dengan kartu preview mini dan live render.
-   - "Stickers": katalog stiker dengan tab kategori, mendukung drag-and-drop pointer, resize, dan tombol hapus (delete).
-   - "Frames": pilihan frame tematik (Polaroid, Vintage, Neon, Film, Minimal, Gradient) menggunakan fungsi drawFrame di canvas-utils.js.
-2. Jika mode multi-shot (4 foto), sediakan selector slot foto agar pengguna bisa mengedit foto 1 sampai 4 secara bergantian.
-3. Buat fungsi compositing offscreen canvas untuk menggabungkan (flatten) foto + filter + stiker + frame menjadi satu gambar final beresolusi tinggi saat tombol "Done" ditekan.
-4. Buat halaman stub `src/pages/export.js` untuk menerima hasil foto final dan daftarkan ke `src/main.js`.
-5. Pastikan `npm run build` berjalan sukses 100%.
+Implementasikan Phase 3: Export, Photocard Print & Google Drive Sync untuk project Photo Studio (Vite + Vanilla JS) sesuai dengan spesifikasi teknis berikut:
+
+1. Buat modul generator photocard di `src/utils/photocard.js` untuk menggabungkan foto-foto menjadi satu lembar photocard utuh beresolusi tinggi (pilihan format: 4-cut vertical strip, 2x2 grid, dan single polaroid) dengan pilihan warna kartu (white, black, pink, blue, cream) serta tanggal/memo teks.
+2. Sempurnakan `src/pages/export.js` dengan preview interaktif canvas photocard, pemilih warna kartu, tombol download file photocard utuh (PNG), dan tombol cetak via browser print.
+3. Tambahkan fitur Social Sharing di `src/pages/export.js`:
+   - Gunakan native Web Share API jika didukung perangkat.
+   - Sediakan modal fallback untuk desktop dengan fitur "Copy Image to Clipboard" dan tautan share langsung ke WhatsApp, X/Twitter, dan Facebook.
+4. Buat modul Google Drive di `src/utils/drive.js` menggunakan Google Identity Services (GIS) & Drive API v3 (scope drive.file). Dukung konfigurasi Client ID yang tersimpan di localStorage dan upload multipart/related foto ke Drive user dengan link konfirmasi sukses.
+5. Sempurnakan CSS print di `src/styles/print.css` agar hasil cetak photocard pas di kertas dan bersih dari elemen UI website.
+6. Pastikan `npm run build` berhasil 100%.
 ```
