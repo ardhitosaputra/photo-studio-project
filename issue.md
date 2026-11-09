@@ -1,6 +1,6 @@
-# 🛠️ Refactor: Remove Frame/Border Features & Implement Explicit Google Drive Login Flow
+# 🛠️ Refactor: Remove Google Drive Feature & Add Dynamic Timer Badge on Camera Button
 
-> **Scope**: UI Simplification & Cloud Storage Auth Refactor  
+> **Scope**: Feature Cleanup & Camera UX Enhancement  
 > **Target**: Modern Desktop & Mobile Browsers  
 > **Status**: ✅ **COMPLETED**  
 > **Assignee**: Programmer / AI Agent  
@@ -9,102 +9,66 @@
 
 ## 📌 Ringkasan Objektif
 
-1. **Eliminasi Fitur Frame & Border**:
-   - Menghapus drawer bingkai tematik (Polaroid, Vintage, Neon, Minimal, 35mm Film Strip, Gradient) dari Editor.
-   - Mengoptimalkan canvas compositing pipeline agar murni memproses **Foto + Filter + Stiker**.
-   - Menyesuaikan layout photocard agar borderless/clean tanpa margin tebal bingkai.
+1. **Eliminasi Fitur Google Drive**:
+   - Menghapus dependensi Google Identity Services (GIS) dari `index.html`.
+   - Menghapus seluruh kartu Google Drive Backup, modal pengaturan Client ID, serta integrasi REST API v3 dari halaman Export.
+   - Halaman ekspor kini berfokus murni pada aksi cepat: **Download PNG resolusi tinggi**, **Cetak Photocard fisik**, dan **Share ke Media Sosial/Clipboard**.
 
-2. **Refactor Alur Google Drive Sync**:
-   - Memisahkan alur otentikasi login dari aksi upload.
-   - Menambahkan status koneksi akun Google: **"Belum Terhubung"** vs **"Terhubung sebagai [Nama/Email]"**.
-   - Pengguna menghubungkan akun terlebih dahulu melalui tombol *"Hubungkan Google Drive"*, setelah login berhasil tombol *"Upload ke Google Drive"* aktif bersama opsi *"Putuskan Akun"*.
+2. **Tampilan Tombol Timer Dinamis di Kamera**:
+   - Memperbaiki tampilan tombol timer `#btn-timer` pada halaman kamera dengan badge teks/angka (`#timer-badge`).
+   - Tombol menampilkan durasi hitung mundur aktif secara real-time (`3s`, `5s`, `10s`, atau `Off`).
+   - Setiap klik memutar opsi durasi (`3s` ➔ `5s` ➔ `10s` ➔ `Off` ➔ `3s`), memperbarui badge teks dan status tombol aktif.
 
 ---
 
 ## 📋 Task Checklist & Spesifikasi Teknis
 
-### [x] Task 1: Hapus UI Frame & Border dari Editor
+### [x] Task 1: Hapus Script Google Identity Services dari `index.html`
 - **File Terkait**:
-  - `src/pages/editor.js`
-  - `src/styles/editor.css`
+  - `index.html`
 - **Spesifikasi Pengerjaan**:
-  1. Hapus tab navigasi `#tab-frames` dan container drawer `#drawer-frames`.
-  2. Tab navigasi editor kini hanya menyisakan **Filter** dan **Stiker**.
-  3. Hapus state `selectedFrame` atau set default ke `null` / `'none'`.
-  4. Hapus event listener interaksi pemilihan item frame.
+  1. Hapus tag `<script src="https://accounts.google.com/gsi/client" async defer></script>`.
 - **Kriteria Lolos Uji**:
-  - Antarmuka editor bersih tanpa tab bingkai/frame.
-  - Pengguna hanya berpindah antara panel filter dan stiker.
+  - Tidak ada request eksternal ke domain Google Identity Services saat aplikasi dimuat.
 
 ---
 
-### [x] Task 2: Bersihkan Pipeline Komposisi Canvas
-- **File Terkait**:
-  - `src/utils/canvas-utils.js`
-  - `src/utils/frames.js` *(opsional: hapus atau jadikan no-op)*
-- **Spesifikasi Pengerjaan**:
-  1. Pada fungsi `renderCompositeCanvas()` / `mergeLayers()`, hilangkan eksekusi penggambaran layer frame overlay (`drawFrameOverlay`).
-  2. Pastikan layer yang dirender hanyalah:
-     - Layer 1: Foto hasil tangkapan kamera (beserta filter aktif).
-     - Layer 2: Seluruh stiker dekoratif yang ditambahkan pengguna.
-- **Kriteria Lolos Uji**:
-  - Render preview dan hasil akhir foto tidak mengandung overlay bingkai apapun.
-
----
-
-### [x] Task 3: Penyesuaian Layout Photocard Siap Cetak
-- **File Terkait**:
-  - `src/utils/photocard.js`
-  - `src/styles/export.css`
-- **Spesifikasi Pengerjaan**:
-  1. Sesuaikan padding/margin layout Single, 4-Cut Strip vertikal, dan 2x2 Grid agar tidak menyisakan ruang kosong bingkai polaroid.
-  2. Pertahankan proporsi foto yang rapi dan estetis dengan layout minimalis.
-- **Kriteria Lolos Uji**:
-  - Hasil photocard di halaman export dan mode print tampak proporsional, bersih, dan borderless.
-
----
-
-### [x] Task 4: Pemisahan Modul Autentikasi Google Drive
-- **File Terkait**:
-  - `src/utils/drive.js`
-- **Spesifikasi Pengerjaan**:
-  1. Buat state lokal `accessToken` dan `currentUserProfile` di dalam modul `drive.js`.
-  2. Implementasikan fungsi-fungsi berikut:
-     - `isGoogleDriveConnected()`: Mengembalikan boolean status token aktif.
-     - `getGoogleDriveUser()`: Mengembalikan info profil akun yang sedang terhubung.
-     - `signInGoogleDrive()`: Meminta token via Google Identity Services (`google.accounts.oauth2.initTokenClient`), fetch user info dasar dari Google UserInfo API (`https://www.googleapis.com/oauth2/v3/userinfo`), simpan token di memori.
-     - `signOutGoogleDrive()`: Melakukan revoke token (`google.accounts.oauth2.revoke`) dan mereset state lokal ke `null`.
-  3. Modifikasi fungsi `uploadToGoogleDrive(blob, filename)`:
-     - Memeriksa ketersediaan `accessToken`. Jika belum ada, lemparkan error untuk mengarahkan pengguna login terlebih dahulu.
-     - Mengunggah file secara multipart ke Drive API v3.
-- **Kriteria Lolos Uji**:
-  - Pemanggilan fungsi login berhasil menampilkan popup consent Google dan menyimpan token aktif.
-  - Sign-out menghapus hak akses sesi saat ini.
-
----
-
-### [x] Task 5: Refactor Komponen UI Google Drive di Halaman Export
+### [x] Task 2: Hapus Seluruh Integrasi Google Drive di Halaman Export
 - **File Terkait**:
   - `src/pages/export.js`
   - `src/styles/export.css`
 - **Spesifikasi Pengerjaan**:
-  1. Sediakan komponen status akun Google Drive:
-     - Indikator status & teks nama akun/email aktif.
-     - Tombol **"Hubungkan Google Drive"** (muncul saat belum login).
-     - Tombol **"Upload ke Google Drive"** & tautan **"Putuskan Akun"** (muncul saat sudah login).
-  2. Pasang event listener:
-     - Klik "Hubungkan": Menjalankan `signInGoogleDrive()`, memunculkan loading state, lalu merefresh status UI jika berhasil.
-     - Klik "Upload": Menjalankan `uploadToGoogleDrive()`, menampilkan progress/toast berhasil beserta tautan file Drive.
-     - Klik "Putuskan Akun": Menjalankan `signOutGoogleDrive()` dan mengembalikan tampilan UI ke status belum terhubung.
+  1. Hapus impor fungsi-fungsi Google Drive (`signInGoogleDrive`, `uploadFileToGoogleDrive`, dsb).
+  2. Hapus container `#gdrive-card` dari template HTML halaman ekspor.
+  3. Hapus fungsi-fungsi pembantu Google Drive: `renderGDriveUI()`, `handleConnectDrive()`, `performConnect()`, `handleUploadDrive()`, `handleDisconnectDrive()`, dan `promptClientIdModal()`.
+  4. Bersihkan stylesheet `src/styles/export.css` dari seluruh aturan `.gdrive-sync-card` dan kelas terkaitnya.
 - **Kriteria Lolos Uji**:
-  - Pengguna tidak bisa upload sebelum login.
-  - Alur otentikasi jelas dan status akun terlihat transparan di halaman ekspor.
+  - Halaman ekspor bersih tanpa komponen Google Drive, fokus pada 3 tombol aksi: Download, Print, dan Share.
 
 ---
 
-### [x] Task 6: Verifikasi Build & Regresi
+### [x] Task 3: Tambahkan Badge Durasi Dinamis pada Tombol Timer Kamera
+- **File Terkait**:
+  - `src/pages/camera.js`
+  - `src/styles/camera.css`
 - **Spesifikasi Pengerjaan**:
-  1. Jalankan `npm run build` dan pastikan build selesai tanpa error sintaks atau modul hilang.
-  2. Jalankan `npm run preview` untuk memastikan tidak ada pemanggilan fungsi frame yang menyebabkan exception runtime.
+  1. Perbarui markup tombol `#btn-timer` agar memuat elemen `<span class="timer-badge" id="timer-badge">3s</span>`.
+  2. Kelola daftar durasi timer: `[3, 5, 10, 0]` (0 = Off).
+  3. Pada event listener klik `#btn-timer`:
+     - Putar indeks durasi timer.
+     - Perbarui teks pada `#timer-badge` (`3s`, `5s`, `10s`, atau `Off`).
+     - Tambahkan/hapus kelas `.active` pada tombol `#btn-timer`.
+     - Tampilkan toast pemberitahuan durasi yang aktif.
+  4. Pastikan hitung mundur kamera menghormati durasi yang sedang dipilih (jika `0`, langsung ambil foto tanpa countdown).
+  5. Tambahkan styling estetis untuk `.timer-badge` di `src/styles/camera.css`.
 - **Kriteria Lolos Uji**:
-  - `dist/` terbentuk sukses (exit code 0).
+  - Pengguna dapat melihat langsung berapa detik timer yang aktif pada tombol kamera.
+  - Mengklik tombol secara instan mengubah angka yang tertera pada tombol.
+
+---
+
+### [x] Task 4: Validasi Build & Regresi
+- **Spesifikasi Pengerjaan**:
+  1. Jalankan `npm run build` dan pastikan tidak ada error kompilasi atau modul hilang.
+- **Kriteria Lolos Uji**:
+  - Build selesai dengan exit code 0 tanpa peringatan modul tak ditemukan.

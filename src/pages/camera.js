@@ -97,8 +97,9 @@ export function createCameraPage(data = {}) {
 
     <!-- Controls -->
     <div class="camera-controls" id="camera-controls">
-      <button class="control-btn" id="btn-timer" title="Toggle Timer (${activeCountdownSeconds}s)">
+      <button class="control-btn ${activeCountdownSeconds > 0 ? 'active' : ''}" id="btn-timer" title="Toggle Timer">
         ${icon('timer', 20)}
+        <span class="timer-badge" id="timer-badge">${activeCountdownSeconds > 0 ? activeCountdownSeconds + 's' : 'Off'}</span>
       </button>
       <button class="capture-btn ripple" id="btn-capture" title="Capture">
       </button>
@@ -158,17 +159,28 @@ export function createCameraPage(data = {}) {
       startCamera(video, wrapper, permissionView, controls);
     });
 
-    // Timer button toggle (3s -> 5s -> 0s -> 3s)
+    // Timer button toggle — cycles: 3s → 5s → 10s → Off → 3s
+    const TIMER_OPTIONS = [3, 5, 10, 0];
+    let timerOptionIndex = TIMER_OPTIONS.indexOf(activeCountdownSeconds) >= 0
+      ? TIMER_OPTIONS.indexOf(activeCountdownSeconds)
+      : 0;
+
     timerBtn.addEventListener('click', () => {
-      if (activeCountdownSeconds === 3) {
-        activeCountdownSeconds = 5;
-      } else if (activeCountdownSeconds === 5) {
-        activeCountdownSeconds = 0;
-      } else {
-        activeCountdownSeconds = 3;
+      timerOptionIndex = (timerOptionIndex + 1) % TIMER_OPTIONS.length;
+      activeCountdownSeconds = TIMER_OPTIONS[timerOptionIndex];
+
+      const badge = page.querySelector('#timer-badge');
+      if (badge) {
+        badge.textContent = activeCountdownSeconds > 0 ? `${activeCountdownSeconds}s` : 'Off';
       }
-      timerBtn.title = `Toggle Timer (${activeCountdownSeconds}s)`;
-      showToast(`Timer set to: ${activeCountdownSeconds ? activeCountdownSeconds + ' seconds' : 'Instant (No timer)'}`, 'info', 2000);
+
+      if (activeCountdownSeconds > 0) {
+        timerBtn.classList.add('active');
+        showToast(`Timer set to ${activeCountdownSeconds} seconds`, 'info', 1500);
+      } else {
+        timerBtn.classList.remove('active');
+        showToast('Timer off — instant capture', 'info', 1500);
+      }
     });
 
     // Retry camera

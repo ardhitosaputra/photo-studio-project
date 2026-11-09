@@ -300,15 +300,15 @@
   .editor-header {
     padding: var(--space-3) var(--space-4);
   }
-  
+
   .editor-canvas-wrapper {
     max-height: 50vh;
   }
-  
+
   .editor-panel.open {
     max-height: 260px;
   }
-  
+
   .filter-thumb {
     width: 56px;
     height: 56px;
