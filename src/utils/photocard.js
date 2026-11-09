@@ -315,3 +315,4 @@ function drawImageCover(ctx, img, x, y, targetW, targetH) {
 
   ctx.drawImage(img, sx, sy, sw, sh, x, y, targetW, targetH);
 }
+

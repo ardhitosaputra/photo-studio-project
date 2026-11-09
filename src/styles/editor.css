@@ -34,6 +34,8 @@
   padding: var(--space-4);
   position: relative;
   overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 .editor-canvas-wrapper {
@@ -44,6 +46,8 @@
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   background: var(--bg-surface);
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 .editor-canvas-wrapper canvas {

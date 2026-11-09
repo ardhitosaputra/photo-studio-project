@@ -9,6 +9,11 @@ export function initModal() {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeModal();
   });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay?.classList.contains('active')) {
+      closeModal();
+    }
+  });
 }
 
 /**

@@ -153,9 +153,48 @@ export function createEditorPage(data = {}) {
     renderStickerOverlay();
     renderPanel();
 
+    // --- Keyboard Shortcuts ---
+    const handleEditorKeyDown = (e) => {
+      if (e.target.matches('input, textarea')) return;
+
+      // Delete selected sticker
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickerId) {
+        e.preventDefault();
+        const edit = photoEdits[activeIndex];
+        edit.stickers = edit.stickers.filter(s => s.id !== selectedStickerId);
+        selectedStickerId = null;
+        renderStickerOverlay();
+        showToast('Sticker deleted', 'info', 1200);
+        return;
+      }
+
+      // Escape deselects
+      if (e.key === 'Escape' && selectedStickerId) {
+        selectedStickerId = null;
+        renderStickerOverlay();
+        return;
+      }
+
+      // 1-4 switch photo slot
+      if (slotBar && ['1', '2', '3', '4'].includes(e.key)) {
+        const slotIdx = parseInt(e.key, 10) - 1;
+        if (slotIdx >= 0 && slotIdx < rawPhotos.length && slotIdx !== activeIndex) {
+          activeIndex = slotIdx;
+          selectedStickerId = null;
+          slotBar.querySelectorAll('.photo-slot-item').forEach(el => el.classList.remove('active'));
+          slotBar.querySelector(`[data-index="${slotIdx}"]`)?.classList.add('active');
+          renderMainCanvas();
+          renderStickerOverlay();
+          renderPanel();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleEditorKeyDown);
+
     // --- Back / Retake Handler ---
     page.querySelector('#btn-back')?.addEventListener('click', () => {
       if (confirm('Are you sure you want to retake? Current edits will be lost.')) {
+        window.removeEventListener('keydown', handleEditorKeyDown);
         router.navigate('camera', { mode });
       }
     });
@@ -190,6 +229,7 @@ export function createEditorPage(data = {}) {
           finalPhotos.push(compositeDataUrl);
         }
 
+        window.removeEventListener('keydown', handleEditorKeyDown);
         showToast('Photos rendered successfully!', 'success');
         router.navigate('export', { finalPhotos, mode });
       } catch (err) {

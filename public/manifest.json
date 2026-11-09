@@ -1,0 +1,19 @@
+{
+  "name": "Photo Studio — Minimalist Photobooth",
+  "short_name": "PhotoStudio",
+  "description": "A minimalist, aesthetic photobooth web application. Capture, filter, sticker, print, and share.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

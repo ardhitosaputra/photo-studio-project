@@ -1,9 +1,33 @@
 /**
  * Web Audio API Sound Synthesizer
- * Provides zero-dependency synthetic audio feedback for countdown, shutter, and interactions
+ * Provides zero-dependency synthetic audio feedback for countdown, shutter, and interactions.
+ * Supports mute/unmute toggle persisted in localStorage.
  */
 
+const MUTE_STORAGE_KEY = 'photo_studio_audio_muted';
 let audioCtx = null;
+
+/**
+ * Check if audio is currently muted
+ */
+export function isAudioMuted() {
+  try {
+    return localStorage.getItem(MUTE_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Toggle audio mute state and return new state
+ */
+export function toggleAudioMute() {
+  const next = !isAudioMuted();
+  try {
+    localStorage.setItem(MUTE_STORAGE_KEY, String(next));
+  } catch {}
+  return next;
+}
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -24,6 +48,8 @@ function getAudioContext() {
  * @param {number} duration - duration in seconds (default: 0.09s)
  */
 export function playCountdownBeep(freq = 880, duration = 0.09) {
+  if (isAudioMuted()) return;
+
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -51,6 +77,8 @@ export function playCountdownBeep(freq = 880, duration = 0.09) {
  * Play synthetic camera shutter mechanical snap
  */
 export function playShutterSound() {
+  if (isAudioMuted()) return;
+
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -110,6 +138,8 @@ export function playShutterSound() {
  * Play subtle success chime
  */
 export function playSuccessSound() {
+  if (isAudioMuted()) return;
+
   try {
     const ctx = getAudioContext();
     if (!ctx) return;

@@ -6,7 +6,7 @@ import { router } from '../router.js';
 import { icon } from '../utils/icons.js';
 import { showToast } from '../components/toast.js';
 import { CAPTURE_MODE, CAPTURE_CONFIG, CAMERA_DEFAULTS } from '../utils/constants.js';
-import { playCountdownBeep, playShutterSound, playSuccessSound } from '../utils/audio.js';
+import { playCountdownBeep, playShutterSound, playSuccessSound, isAudioMuted, toggleAudioMute } from '../utils/audio.js';
 
 let stream = null;
 let currentFacingMode = CAMERA_DEFAULTS.facingMode;
@@ -32,6 +32,9 @@ export function createCameraPage(data = {}) {
       </button>
       <div class="badge">${config.icon} ${config.label}</div>
       <div class="camera-header-actions">
+        <button class="control-btn" id="btn-mute" title="Toggle Sound">
+          ${icon(isAudioMuted() ? 'volumeX' : 'volume2', 20)}
+        </button>
         <button class="control-btn" id="btn-flip" title="Flip Camera">
           ${icon('flipCamera', 20)}
         </button>
@@ -122,9 +125,30 @@ export function createCameraPage(data = {}) {
     startCamera(video, wrapper, permissionView, controls);
 
     // Back button
-    page.querySelector('#btn-back').addEventListener('click', () => {
+    const cleanupAndGo = (path, params) => {
+      window.removeEventListener('keydown', handleKeyDown);
       stopCamera();
-      router.navigate('home');
+      router.navigate(path, params);
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space' && !e.target.matches('input, textarea, button')) {
+        e.preventDefault();
+        page.querySelector('#btn-capture')?.click();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    page.querySelector('#btn-back').addEventListener('click', () => {
+      cleanupAndGo('home');
+    });
+
+    // Mute toggle
+    const muteBtn = page.querySelector('#btn-mute');
+    muteBtn?.addEventListener('click', () => {
+      const muted = toggleAudioMute();
+      muteBtn.innerHTML = icon(muted ? 'volumeX' : 'volume2', 20);
+      showToast(muted ? 'Sound Muted' : 'Sound Enabled', 'info', 1500);
     });
 
     // Flip camera
@@ -181,8 +205,7 @@ export function createCameraPage(data = {}) {
         playSuccessSound();
         showToast('All photos uploaded successfully!', 'success');
         setTimeout(() => {
-          stopCamera();
-          router.navigate('editor', { photos: capturedPhotos, mode });
+          cleanupAndGo('editor', { photos: capturedPhotos, mode });
         }, 500);
       } else {
         showToast(`Uploaded ${capturedPhotos.length}/${totalShots} photos — ${totalShots - capturedPhotos.length} remaining`, 'info');
@@ -230,8 +253,7 @@ export function createCameraPage(data = {}) {
         playSuccessSound();
         showToast('All photos captured!', 'success');
         setTimeout(() => {
-          stopCamera();
-          router.navigate('editor', { photos: capturedPhotos, mode });
+          cleanupAndGo('editor', { photos: capturedPhotos, mode });
         }, 600);
       } else {
         showToast(`Photo ${capturedPhotos.length}/${totalShots} captured! Next shot ready.`, 'info', 1800);
