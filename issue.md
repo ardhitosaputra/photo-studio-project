@@ -1,122 +1,100 @@
-# 📤 Phase 3: Export, Photocard Print & Google Drive Sync
+# 🚀 Phase 4: Polish, PWA, Gestures & Deployment
 
-> **Milestone**: Phase 3 (Week 5 - 6)  
-> **Target**: Photocard Canvas Layout Engine, Print Formatting, Social Media Sharing, Clipboard Copy & Google Drive Cloud Sync  
-> **Status**: ✅ **COMPLETED**  
+> **Milestone**: Phase 4 (Week 7 - 8)  
+> **Target**: PWA (Installable & Offline), Touch Gestures & Keyboard Shortcuts, Audio Mute Toggle, SEO/Open Graph, dan GitHub Pages Automated Deployment (CI/CD)  
+> **Status**: 🟡 **OPEN**  
 > **Assignee**: Programmer / AI Agent  
 
 ---
 
 ## 📌 Ringkasan Objektif
 
-Mentransformasikan halaman hasil akhir (`export.js`) menjadi sistem distribusi dan pencetakan foto yang lengkap dan siap produksi:
-1. **Photocard Layout Canvas Generator**: Menggabungkan kumpulan foto hasil editan menjadi satu lembar photocard utuh (*vertical 4-cut strip*, *2×2 grid*, atau *single polaroid*) dengan pilihan warna kartu (*white, black, pink, blue, cream*) dan teks memo/timestamp kustom.
-2. **Download & Cetak Presisi**: Mengunduh satu file gambar photocard jadi (PNG resolusi tinggi) dan mencetak fisik secara proporsional via optimasi `@media print`.
-3. **Social Media Sharing**: Berbagi instan via native Web Share API (mobile), tombol *Copy Image to Clipboard*, serta modal share intent langsung ke WhatsApp, Twitter/X, dan Facebook.
-4. **Google Drive Cloud Sync**: Mengunggah photocard langsung ke Google Drive pengguna menggunakan Google Identity Services (GIS) & Google Drive API v3 secara client-side.
+Menyempurnakan aplikasi Photo Studio dari status *feature-complete* menjadi **siap produksi (production-ready)** dengan standar web modern:
+1. **PWA (Progressive Web App)**: Dapat di-install di layar utama perangkat (*standalone*) dan mendukung penggunaan offline dengan Service Worker.
+2. **Mobile Gestures & Keyboard Shortcuts**: Mengeliminasi *pull-to-refresh* yang mengganggu saat manipulasi kanvas, mendukung gestur sentuh yang halus, dan tombol keyboard (*Space* shutter, *Delete* stiker, *1-4* slot switcher, *Esc* modal).
+3. **Audio Control**: Fitur mute/unmute efek suara dengan persistensi ke `localStorage`.
+4. **SEO & Open Graph Meta Tags**: Kartu pratinjau tautan media sosial yang kaya dan deteksi status jaringan (*online/offline* toast).
+5. **CI/CD Deployment**: Workflow GitHub Actions untuk otomatis build dan deploy ke **GitHub Pages**.
 
 ---
 
 ## 📋 Task Checklist & Spesifikasi Teknis
 
-### [x] Task 3.1: Photocard Canvas Layout Engine
+### [ ] Task 4.1: PWA (Progressive Web App) & Dukungan Offline
 - **File Terkait**:
-  - `src/utils/photocard.js` *(baru)*
-- **Spesifikasi Pengerjaan**:
-  Buat fungsi generator kanvas lembar photocard beresolusi tinggi:
-  1. **Mode Strip (Vertical 4-cut)**:
-     - Dimensi kanvas proporsional (1200 × 3600 px untuk rasio strip 1:3).
-     - Susun 4 foto secara vertikal berjarak rapi dengan margin tepi yang konsisten.
-     - Bagian footer memuat logo/branding *"✦ PHOTO STUDIO ✦"* dan tanggal otomatis (contoh: `2026.11.03`) atau teks memo pilihan pengguna.
-  2. **Mode Grid (2×2)**:
-     - Dimensi kanvas 2400 × 1800 px (rasio 4:3) dengan 4 foto terbagi rata 2 kolom × 2 baris.
-  3. **Mode Single Polaroid**:
-     - Format polaroid klasik dengan area bawah lebih lebar untuk catatan memo kustom.
-  4. **Pilihan Warna Kartu Photocard**:
-     - *Classic White* (`#ffffff`), *Midnight Black* (`#121212`), *Pastel Pink* (`#ffe4e6`), *Sky Blue* (`#e0f2fe`), dan *Vintage Cream* (`#fef3c7`).
-- **Kriteria Lolos Uji (Acceptance Criteria)**:
-  - Menghasilkan satu string Base64 DataURL gambar photocard utuh beresolusi tinggi.
-
----
-
-### [x] Task 3.2: Antarmuka Kustomisasi Photocard & Preview Interaktif
-- **File Terkait**:
-  - `src/pages/export.js`
-  - `src/styles/export.css`
-- **Spesifikasi Pengerjaan**:
-  1. Tampilkan canvas preview photocard interaktif di bagian tengah halaman.
-  2. Tambahkan panel kontrol kustomisasi:
-     - **Pilihan Warna Photocard**: Lingkaran palet warna (*White, Black, Pink, Blue, Cream*).
-     - **Input Teks Memo/Caption**: Kolom input teks opsional untuk menambahkan pesan singkat di photocard.
-  3. Tombol **"Download Photocard"**:
-     - Mengunduh file photocard utuh (`photocard-studio-[timestamp].png`).
-     - Sediakan tautan kecil alternatif: *"Download Individual Photos"* jika pengguna ingin mengunduh foto mentah satu per satu.
-- **Kriteria Lolos Uji**:
-  - Mengubah warna atau teks memo langsung memperbarui preview photocard secara instan.
-  - File yang terunduh adalah satu lembar photocard komplit, bukan foto terpisah.
-
----
-
-### [x] Task 3.3: Optimasi Format Cetak Fisik (`@media print`)
-- **File Terkait**:
-  - `src/styles/print.css`
-- **Spesifikasi Pengerjaan**:
-  1. Di dalam `@media print`:
-     - Sembunyikan seluruh UI navigasi, tombol, header, dan pemilih warna (`.no-print`).
-     - Pusatkan kanvas photocard di tengah halaman cetak (`page-break-inside: avoid`).
-     - Set margin cetak halaman: `@page { margin: 0; size: auto; }`.
-  2. Tombol **"Print Photocard"** memanggil `window.print()`.
-- **Kriteria Lolos Uji**:
-  - Dialog print browser menampilkan kartu foto bersih di tengah tanpa elemen tombol web di sekelilingnya.
-
----
-
-### [x] Task 3.4: Modal Social Media Sharing & Clipboard API
-- **File Terkait**:
-  - `src/pages/export.js`
-  - `src/components/modal.js`
-- **Spesifikasi Pengerjaan**:
-  1. **Mobile Web Share API**:
-     - Cek `navigator.canShare && navigator.canShare({ files })`. Jika didukung, langsung panggil dialog share native ponsel.
-  2. **Desktop Fallback (Share Modal)**:
-     - Jika share file tidak didukung browser desktop, buka modal share dengan opsi:
-       - **Copy Image to Clipboard**: Menggunakan `navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])` sehingga pengguna bisa langsung *Ctrl+V* di WhatsApp Web, DM Instagram, atau Discord.
-       - **WhatsApp Direct**: Buka tautan `https://api.whatsapp.com/send?text=...`.
-       - **Twitter / X Direct**: Buka tautan `https://twitter.com/intent/tweet?text=...`.
-       - **Facebook Direct**: Buka tautan sharer Facebook.
-- **Kriteria Lolos Uji**:
-  - Tombol "Copy Image" berhasil menyalin binary foto ke clipboard dan memunculkan toast konfirmasi.
-  - Tautan WhatsApp / X terbuka di tab baru dengan teks pesan default.
-
----
-
-### [x] Task 3.5: Integrasi Google Drive Sync (Client-Side GIS & REST API v3)
-- **File Terkait**:
-  - `src/utils/drive.js` *(baru)*
+  - `public/manifest.json` *(baru)*
+  - `public/sw.js` *(baru)*
   - `index.html`
-  - `src/pages/export.js`
+  - `src/main.js`
 - **Spesifikasi Pengerjaan**:
-  1. Di `index.html`, muat script Google Identity Services:
-     ```html
-     <script src="https://accounts.google.com/gsi/client" async defer></script>
-     ```
-  2. **Inisialisasi Token Client**:
-     - Gunakan `google.accounts.oauth2.initTokenClient` dengan scope `https://www.googleapis.com/auth/drive.file`.
-  3. **Konfigurasi Client ID**:
-     - Simpan `google_client_id` di `localStorage`.
-     - Jika Client ID belum diisi oleh pengguna/developer, tampilkan modal pengaturan ringkas untuk memasukkan Client ID Google Cloud mereka (dengan petunjuk singkat).
-  4. **Unggah File ke Drive**:
-     - Konversi dataURL photocard ke Blob.
-     - Kirim request `multipart/related` POST ke `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart` berisi metadata nama file dan konten binary.
-  5. **Feedback UI**:
-     - Tampilkan animasi spinner loading saat proses upload berlangsung.
-     - Tampilkan notifikasi toast/modal sukses berisi tombol **"Open in Google Drive"** yang mengarah ke `https://drive.google.com/file/d/{fileId}/view`.
-- **Kriteria Lolos Uji**:
-  - Pengguna dapat login via popup Google, memilih akun, dan file berhasil masuk ke folder Google Drive mereka.
+  1. Buat `public/manifest.json` berisi konfigurasi nama aplikasi, tema gelap (`#0a0a0a`), orientasi portrait, dan icon.
+  2. Buat `public/sw.js` untuk cache statis aset aplikasi.
+  3. Daftarkan Service Worker pada `src/main.js`.
+  4. Tambahkan link manifest di `index.html`.
+- **Kriteria Lolos Uji (Acceptance Criteria)**:
+  - Browser menampilkan opsi install aplikasi (*Install App / Add to Home Screen*).
+  - Halaman tetap dapat dimuat dan fitur kamera/editor berfungsi saat perangkat offline.
 
 ---
 
-### [x] Task 3.6: Build Verification
+### [ ] Task 4.2: Penyempurnaan Gestur Layar Sentuh & Pintasan Keyboard
+- **File Terkait**:
+  - `src/pages/editor.js`
+  - `src/pages/camera.js`
+  - `src/styles/editor.css`
+- **Spesifikasi Pengerjaan**:
+  1. Atur `touch-action: none` dan `overscroll-behavior: none` pada area kanvas editor.
+  2. Tambahkan handler event keyboard:
+     - `Space`: Shutter foto di kamera.
+     - `Delete` / `Backspace`: Menghapus stiker yang sedang dipilih.
+     - `1`, `2`, `3`, `4`: Berpindah slot foto di editor multi-shot.
+     - `Esc`: Menutup modal aktif.
+- **Kriteria Lolos Uji**:
+  - Menggeser stiker di layar ponsel tidak memicu reload browser.
+  - Shortcut keyboard berfungsi responsif di desktop.
+
+---
+
+### [ ] Task 4.3: Pengaturan Audio Mute / Unmute
+- **File Terkait**:
+  - `src/utils/audio.js`
+  - `src/pages/camera.js`
+  - `src/styles/components.css`
+- **Spesifikasi Pengerjaan**:
+  1. Sediakan state mute di `src/utils/audio.js` dengan persistensi ke `localStorage`.
+  2. Tambahkan tombol toggle suara (🔊 / 🔇) di antarmuka kamera / header.
+  3. Bila mute aktif, fungsi audio tidak membunyikan suara beep maupun shutter.
+- **Kriteria Lolos Uji**:
+  - Suara dapat dimatikan/dihidupkan dengan sekali klik dan statusnya tersimpan antar sesi.
+
+---
+
+### [ ] Task 4.4: SEO, Open Graph & Deteksi Status Jaringan
+- **File Terkait**:
+  - `index.html`
+  - `src/main.js`
+- **Spesifikasi Pengerjaan**:
+  1. Tambahkan meta tags Open Graph (`og:image`, `og:title`, `og:description`, `og:url`) dan Twitter Card (`summary_large_image`) di `index.html`.
+  2. Pasang event listener `online` dan `offline` di `src/main.js` yang memicu notifikasi toast informatif.
+- **Kriteria Lolos Uji**:
+  - Link preview terbaca sempurna pada media sosial.
+  - Terputus dari internet memunculkan toast pemberitahuan mode offline.
+
+---
+
+### [ ] Task 4.5: Otomasi Deployment ke GitHub Pages (CI/CD)
+- **File Terkait**:
+  - `vite.config.js`
+  - `.github/workflows/deploy.yml` *(baru)*
+- **Spesifikasi Pengerjaan**:
+  1. Di `vite.config.js`, atur `base: './'` agar path aset relatif.
+  2. Buat file workflow GitHub Actions `.github/workflows/deploy.yml` untuk otomatis build dan deploy folder `dist/` ke GitHub Pages pada setiap push ke branch `main`.
+- **Kriteria Lolos Uji**:
+  - Workflow GitHub Actions berhasil mem-publish situs live tanpa error 404 path aset.
+
+---
+
+### [ ] Task 4.6: Verifikasi Akhir Build Produksi
 - Jalankan perintah:
   ```bash
   npm run build
@@ -129,14 +107,14 @@ Mentransformasikan halaman hasil akhir (`export.js`) menjadi sistem distribusi d
 ## 🤖 Prompt Instruksi untuk AI Agent / Programmer (Copy-Paste)
 
 ```markdown
-Implementasikan Phase 3: Export, Photocard Print & Google Drive Sync untuk project Photo Studio (Vite + Vanilla JS) sesuai dengan spesifikasi teknis berikut:
+Implementasikan Phase 4: Polish, PWA, Gestures & Deployment untuk project Photo Studio (Vite + Vanilla JS) sesuai dengan spesifikasi teknis berikut:
 
-1. Buat modul generator photocard di `src/utils/photocard.js` untuk menggabungkan foto-foto menjadi satu lembar photocard utuh beresolusi tinggi (pilihan format: 4-cut vertical strip, 2x2 grid, dan single polaroid) dengan pilihan warna kartu (white, black, pink, blue, cream) serta tanggal/memo teks.
-2. Sempurnakan `src/pages/export.js` dengan preview interaktif canvas photocard, pemilih warna kartu, tombol download file photocard utuh (PNG), dan tombol cetak via browser print.
-3. Tambahkan fitur Social Sharing di `src/pages/export.js`:
-   - Gunakan native Web Share API jika didukung perangkat.
-   - Sediakan modal fallback untuk desktop dengan fitur "Copy Image to Clipboard" dan tautan share langsung ke WhatsApp, X/Twitter, dan Facebook.
-4. Buat modul Google Drive di `src/utils/drive.js` menggunakan Google Identity Services (GIS) & Drive API v3 (scope drive.file). Dukung konfigurasi Client ID yang tersimpan di localStorage dan upload multipart/related foto ke Drive user dengan link konfirmasi sukses.
-5. Sempurnakan CSS print di `src/styles/print.css` agar hasil cetak photocard pas di kertas dan bersih dari elemen UI website.
+1. Buat `public/manifest.json` dan Service Worker `public/sw.js` untuk dukungan PWA (Progressive Web App), lalu daftarkan di `src/main.js` agar aplikasi dapat di-install dan berjalan offline.
+2. Sempurnakan interaksi di `src/pages/editor.js` dan `src/pages/camera.js`:
+   - Cegah pull-to-refresh dan scrolling yang tidak disengaja saat menyeret stiker (touch-action: none).
+   - Tambahkan pintasan keyboard desktop: tombol Space untuk shutter kamera, tombol Delete untuk menghapus stiker terpilih, tombol 1-4 untuk berpindah slot foto.
+3. Tambahkan fitur Mute / Unmute audio (tersimpan di localStorage) pada `src/utils/audio.js` dan sediakan tombol toggle ikon suara di header.
+4. Lengkapi Open Graph & Twitter meta tags di `index.html`, serta tambahkan listener offline/online toast di `src/main.js`.
+5. Atur `base: './'` pada `vite.config.js` dan buat workflow GitHub Actions `.github/workflows/deploy.yml` untuk otomatis build & deploy ke GitHub Pages saat push ke branch `main`.
 6. Pastikan `npm run build` berhasil 100%.
 ```
