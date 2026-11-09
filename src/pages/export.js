@@ -1,22 +1,25 @@
 /**
- * Export & Share Page (Phase 3 Full Implementation)
+ * Export & Share Page
  * Features:
- * - Unified Photocard Layout Canvas Engine (Strip, Grid 2x2, Polaroid)
+ * - Unified Photocard Layout Canvas Engine (Strip, Grid 2x2, Single)
  * - Customizer: Card theme colors & memo/caption text
  * - High-Res Unified Photocard PNG Download & Individual Shots Download
  * - Print-Ready Output with CSS @media print
  * - Social Media Sharing (Web Share API, Clipboard Copy, WhatsApp, Twitter, Facebook)
- * - Google Drive Cloud Sync (GIS OAuth2 & Drive REST API v3 Multipart Upload)
+ * - Explicit Google Drive Cloud Sync: Sign-in status, profile display, direct upload, and account disconnection
  */
 
 import { router } from '../router.js';
 import { icon } from '../utils/icons.js';
 import { showToast } from '../components/toast.js';
 import { showModal, closeModal } from '../components/modal.js';
-import { CAPTURE_MODE, CAPTURE_CONFIG, LAYOUTS, SHARE_URLS } from '../utils/constants.js';
-import { renderPhotocard, CARD_THEMES, getFormattedDate } from '../utils/photocard.js';
+import { CAPTURE_MODE, CAPTURE_CONFIG, LAYOUTS } from '../utils/constants.js';
+import { renderPhotocard, CARD_THEMES } from '../utils/photocard.js';
 import {
-  requestGoogleAccessToken,
+  signInGoogleDrive,
+  signOutGoogleDrive,
+  isGoogleDriveConnected,
+  getGoogleDriveUser,
   uploadFileToGoogleDrive,
   getStoredClientId,
   setStoredClientId,
@@ -129,17 +132,17 @@ export function createExportPage(data = {}) {
         </div>
       </div>
 
-      <!-- Actions Grid -->
+      <!-- Quick Action Buttons -->
       <div class="export-actions no-print">
         <button class="export-action-btn" id="btn-download" title="Save Photocard PNG">
           <div class="export-action-icon download">${icon('download', 24)}</div>
-          <div class="export-action-label">Download Card</div>
+          <div class="export-action-label">Download</div>
           <div class="export-action-desc">High-Res PNG</div>
         </button>
 
         <button class="export-action-btn" id="btn-print" title="Print physical photocard">
           <div class="export-action-icon print">${icon('printer', 24)}</div>
-          <div class="export-action-label">Print Photocard</div>
+          <div class="export-action-label">Print</div>
           <div class="export-action-desc">Ready for printer</div>
         </button>
 
@@ -148,12 +151,11 @@ export function createExportPage(data = {}) {
           <div class="export-action-label">Share</div>
           <div class="export-action-desc">Socials & copy</div>
         </button>
+      </div>
 
-        <button class="export-action-btn" id="btn-drive" title="Upload to Google Drive">
-          <div class="export-action-icon drive" id="drive-icon">${icon('cloud', 24)}</div>
-          <div class="export-action-label" id="drive-label">Google Drive</div>
-          <div class="export-action-desc" id="drive-desc">Save to cloud</div>
-        </button>
+      <!-- Dedicated Google Drive Sync Card -->
+      <div class="gdrive-sync-card no-print" id="gdrive-card">
+        <!-- Rendered dynamically -->
       </div>
 
       <!-- Secondary Download: Individual Raw Photos -->
@@ -174,6 +176,9 @@ export function createExportPage(data = {}) {
 
     // Generate initial photocard
     updatePhotocard();
+
+    // Render Google Drive UI state
+    renderGDriveUI();
 
     // Re-render photocard function
     async function updatePhotocard() {
@@ -315,15 +320,160 @@ export function createExportPage(data = {}) {
       openShareModal(currentPhotocard);
     });
 
-    // --- Google Drive Cloud Sync ---
-    page.querySelector('#btn-drive')?.addEventListener('click', async () => {
+    // --- Google Drive UI Renderer & Handlers ---
+    function renderGDriveUI() {
+      const container = page.querySelector('#gdrive-card');
+      if (!container) return;
+
+      const connected = isGoogleDriveConnected();
+      const user = getGoogleDriveUser();
+
+      if (!connected) {
+        container.innerHTML = `
+          <div class="gdrive-header">
+            <div class="gdrive-title-group">
+              <div class="gdrive-icon-badge">${icon('cloud', 20)}</div>
+              <div>
+                <div class="gdrive-card-title">Google Drive Backup</div>
+                <div class="gdrive-status-text">
+                  <span class="status-dot disconnected"></span> Belum Terhubung
+                </div>
+              </div>
+            </div>
+            <button class="btn-config-client" id="btn-config-client" title="Pengaturan Client ID Google">⚙️</button>
+          </div>
+          <p class="gdrive-card-desc">
+            Hubungkan akun Google Drive untuk menyimpan photocard langsung ke penyimpanan cloud pribadi Anda.
+          </p>
+          <div class="gdrive-card-actions">
+            <button class="btn btn-secondary w-full" id="btn-gdrive-connect">
+              ${icon('cloud', 18)} Hubungkan Google Drive
+            </button>
+          </div>
+        `;
+
+        container.querySelector('#btn-gdrive-connect')?.addEventListener('click', handleConnectDrive);
+      } else {
+        const userName = user?.name || user?.email || 'Google User';
+        const userEmail = user?.email || '';
+
+        container.innerHTML = `
+          <div class="gdrive-header">
+            <div class="gdrive-title-group">
+              <div class="gdrive-icon-badge connected">${icon('cloud', 20)}</div>
+              <div>
+                <div class="gdrive-card-title">Google Drive Backup</div>
+                <div class="gdrive-status-text">
+                  <span class="status-dot connected"></span> Terhubung: <strong>${userName}</strong>
+                </div>
+              </div>
+            </div>
+            <button class="btn-config-client" id="btn-config-client" title="Pengaturan Client ID Google">⚙️</button>
+          </div>
+          ${userEmail ? `<div class="gdrive-email-subtext">${userEmail}</div>` : ''}
+          <div class="gdrive-card-actions connected">
+            <button class="btn btn-primary" id="btn-gdrive-upload" style="flex: 1;">
+              ${icon('upload', 18)} <span id="gdrive-upload-text">Simpan ke Google Drive</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" id="btn-gdrive-disconnect" title="Putuskan Akun">
+              ${icon('logOut', 16)} Putuskan
+            </button>
+          </div>
+        `;
+
+        container.querySelector('#btn-gdrive-upload')?.addEventListener('click', handleUploadDrive);
+        container.querySelector('#btn-gdrive-disconnect')?.addEventListener('click', handleDisconnectDrive);
+      }
+
+      container.querySelector('#btn-config-client')?.addEventListener('click', () => {
+        promptClientIdModal((newId) => {
+          setStoredClientId(newId);
+          showToast('Client ID tersimpan. Klik hubungkan untuk masuk.', 'success');
+        });
+      });
+    }
+
+    async function handleConnectDrive() {
+      let clientId = getStoredClientId();
+      if (!clientId) {
+        promptClientIdModal(async (newId) => {
+          setStoredClientId(newId);
+          await performConnect(newId);
+        });
+        return;
+      }
+      await performConnect(clientId);
+    }
+
+    async function performConnect(clientId) {
+      const btn = page.querySelector('#btn-gdrive-connect');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner" style="width: 16px; height: 16px;"></div> Menghubungkan...`;
+      }
+
+      try {
+        await signInGoogleDrive(clientId);
+        showToast('Berhasil terhubung ke akun Google Drive!', 'success');
+        renderGDriveUI();
+      } catch (err) {
+        console.error('Google Sign-in error:', err);
+        showToast(`Gagal login: ${err.message || 'Error'}`, 'error', 4500);
+        renderGDriveUI();
+      }
+    }
+
+    async function handleUploadDrive() {
       if (!currentPhotocard?.blob) {
-        showToast('Photocard is not ready yet', 'warning');
+        showToast('Photocard belum siap', 'warning');
         return;
       }
 
-      await handleGoogleDriveUpload(currentPhotocard, page);
-    });
+      const uploadBtn = page.querySelector('#btn-gdrive-upload');
+      const uploadText = page.querySelector('#gdrive-upload-text');
+      if (uploadBtn) uploadBtn.disabled = true;
+      if (uploadText) uploadText.textContent = 'Mengunggah...';
+
+      try {
+        const filename = `PhotoStudio_${selectedLayout}_${Date.now()}.png`;
+        const result = await uploadFileToGoogleDrive({
+          blob: currentPhotocard.blob,
+          filename: filename,
+        });
+
+        showToast('Berhasil disimpan ke Google Drive!', 'success', 4000);
+
+        // Show Success Modal with link
+        const successBody = document.createElement('div');
+        successBody.style.cssText = 'display: flex; flex-direction: column; gap: var(--space-4); text-align: center;';
+        successBody.innerHTML = `
+          <div style="font-size: 48px;">☁️</div>
+          <h4 style="font-family: var(--font-display); font-size: var(--text-lg);">Tersimpan di Google Drive!</h4>
+          <p style="font-size: var(--text-sm); color: var(--text-secondary);">
+            Photocard telah tersimpan secara aman di Google Drive Anda sebagai <strong>${result.name}</strong>.
+          </p>
+          <a href="${result.viewUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="margin-top: var(--space-2);">
+            Buka di Google Drive ↗
+          </a>
+        `;
+
+        showModal('Google Drive Backup', successBody);
+      } catch (err) {
+        console.error('Drive upload error:', err);
+        showToast(`Gagal upload: ${err.message || 'Unknown error'}`, 'error', 4500);
+      } finally {
+        if (uploadBtn) uploadBtn.disabled = false;
+        if (uploadText) uploadText.textContent = 'Simpan ke Google Drive';
+      }
+    }
+
+    function handleDisconnectDrive() {
+      if (confirm('Apakah Anda yakin ingin memutuskan akun Google Drive dari sesi ini?')) {
+        signOutGoogleDrive();
+        showToast('Akun Google Drive diputuskan.', 'info');
+        renderGDriveUI();
+      }
+    }
   });
 
   return page;
@@ -398,88 +548,6 @@ function openShareModal(photocard) {
 }
 
 /**
- * Handle Google Drive Upload with OAuth 2.0
- */
-async function handleGoogleDriveUpload(photocard, page) {
-  let clientId = getStoredClientId();
-
-  // Prompt user for Client ID if not yet set
-  if (!clientId) {
-    promptClientIdModal(async (newId) => {
-      setStoredClientId(newId);
-      await performDriveUpload(newId, photocard, page);
-    });
-    return;
-  }
-
-  await performDriveUpload(clientId, photocard, page);
-}
-
-/**
- * Perform actual Google Drive Upload
- */
-async function performDriveUpload(clientId, photocard, page) {
-  const driveLabel = page.querySelector('#drive-label');
-  const driveDesc = page.querySelector('#drive-desc');
-  const driveIcon = page.querySelector('#drive-icon');
-
-  try {
-    if (driveLabel) driveLabel.textContent = 'Connecting...';
-    if (driveDesc) driveDesc.textContent = 'Authenticating';
-    if (driveIcon) driveIcon.innerHTML = `<div class="spinner" style="width: 20px; height: 20px;"></div>`;
-
-    // 1. Get access token
-    const token = await requestGoogleAccessToken(clientId);
-
-    if (driveLabel) driveLabel.textContent = 'Uploading...';
-    if (driveDesc) driveDesc.textContent = 'Transferring';
-
-    // 2. Upload file
-    const filename = `PhotoStudio_${Date.now()}.png`;
-    const result = await uploadFileToGoogleDrive({
-      blob: photocard.blob,
-      filename: filename,
-      accessToken: token,
-    });
-
-    showToast('Saved to Google Drive successfully!', 'success', 4000);
-
-    // Show Success Modal with link
-    const successBody = document.createElement('div');
-    successBody.style.cssText = 'display: flex; flex-direction: column; gap: var(--space-4); text-align: center;';
-    successBody.innerHTML = `
-      <div style="font-size: 48px;">☁️</div>
-      <h4 style="font-family: var(--font-display); font-size: var(--text-lg);">Uploaded to Drive!</h4>
-      <p style="font-size: var(--text-sm); color: var(--text-secondary);">
-        Your photocard has been securely saved to your Google Drive as <strong>${result.name}</strong>.
-      </p>
-      <a href="${result.viewUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="margin-top: var(--space-2);">
-        Open in Google Drive ↗
-      </a>
-    `;
-
-    showModal('Google Drive Sync', successBody);
-  } catch (err) {
-    console.error('Google Drive Upload error:', err);
-
-    if (err.message && err.message.includes('Client ID')) {
-      showToast(err.message, 'error');
-      // Prompt re-entering client id
-      promptClientIdModal((newId) => {
-        setStoredClientId(newId);
-        performDriveUpload(newId, photocard, page);
-      });
-    } else {
-      showToast(`Drive upload: ${err.message || 'Unknown error'}`, 'error', 4500);
-    }
-  } finally {
-    if (driveLabel) driveLabel.textContent = 'Google Drive';
-    if (driveDesc) driveDesc.textContent = 'Save to cloud';
-    if (driveIcon) driveIcon.innerHTML = icon('cloud', 24);
-  }
-}
-
-/**
  * Modal to input Google OAuth Client ID
  */
 function promptClientIdModal(onSave) {
@@ -487,34 +555,34 @@ function promptClientIdModal(onSave) {
   modalContent.style.cssText = 'display: flex; flex-direction: column; gap: var(--space-3);';
   modalContent.innerHTML = `
     <p style="font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.5;">
-      To save photos directly to your personal Google Drive, please enter your <strong>Google Cloud OAuth 2.0 Client ID</strong> (Web application type).
+      Untuk menyimpan foto ke Google Drive pribadi Anda, silakan masukkan <strong>Google Cloud OAuth 2.0 Client ID</strong> (Web application type).
     </p>
     <div style="display: flex; flex-direction: column; gap: 6px;">
       <label style="font-size: var(--text-xs); font-weight: 600; color: var(--text-secondary);">Google Client ID</label>
       <input type="text" id="input-client-id" class="memo-input" placeholder="e.g. 123456789-xxxx.apps.googleusercontent.com" value="${getStoredClientId()}" />
     </div>
     <div style="font-size: 11px; color: var(--text-muted); background: var(--glass); padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-      💡 Note: Client ID is safely stored in your browser's localStorage only and requires scope <code>drive.file</code>.
+      💡 Catatan: Client ID tersimpan secara aman di localStorage browser Anda dan hanya meminta otorisasi <code>drive.file</code>.
     </div>
   `;
 
   const footer = document.createElement('div');
   footer.style.cssText = 'display: flex; justify-content: flex-end; gap: var(--space-2);';
   footer.innerHTML = `
-    <button class="btn btn-ghost btn-sm" id="btn-cancel-client">Cancel</button>
-    <button class="btn btn-primary btn-sm" id="btn-save-client">Save & Connect</button>
+    <button class="btn btn-ghost btn-sm" id="btn-cancel-client">Batal</button>
+    <button class="btn btn-primary btn-sm" id="btn-save-client">Simpan</button>
   `;
 
   footer.querySelector('#btn-cancel-client').onclick = closeModal;
   footer.querySelector('#btn-save-client').onclick = () => {
     const val = modalContent.querySelector('#input-client-id').value.trim();
     if (!val) {
-      showToast('Please enter a valid Google Client ID', 'warning');
+      showToast('Silakan masukkan Google Client ID yang valid', 'warning');
       return;
     }
     closeModal();
     onSave(val);
   };
 
-  showModal('Google Drive Configuration', modalContent, footer);
+  showModal('Konfigurasi Google Drive', modalContent, footer);
 }

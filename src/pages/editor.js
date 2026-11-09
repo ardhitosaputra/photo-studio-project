@@ -7,8 +7,8 @@
 import { router } from '../router.js';
 import { icon } from '../utils/icons.js';
 import { showToast } from '../components/toast.js';
-import { CAPTURE_MODE, CAPTURE_CONFIG, FILTERS, STICKERS, FRAMES } from '../utils/constants.js';
-import { drawFrame, compositePhoto, loadImage } from '../utils/canvas-utils.js';
+import { CAPTURE_MODE, CAPTURE_CONFIG, FILTERS, STICKERS } from '../utils/constants.js';
+import { compositePhoto, loadImage } from '../utils/canvas-utils.js';
 
 export function createEditorPage(data = {}) {
   const routerData = router.getData();
@@ -51,7 +51,7 @@ export function createEditorPage(data = {}) {
 
   // --- Editor State ---
   let activeIndex = 0;
-  let activeTab = 'filters'; // 'filters' | 'stickers' | 'frames' | null
+  let activeTab = 'filters'; // 'filters' | 'stickers' | null
   let activeStickerCategory = 'emoji';
   let selectedStickerId = null;
   let isCompositing = false;
@@ -59,7 +59,6 @@ export function createEditorPage(data = {}) {
   // Individual edit state for each photo
   const photoEdits = rawPhotos.map(() => ({
     filter: 'none',
-    frame: 'none',
     stickers: [], // Array of { id, content, x (%), y (%), size (px), rotation (deg) }
   }));
 
@@ -100,9 +99,6 @@ export function createEditorPage(data = {}) {
         <button class="apply-all-btn" id="btn-apply-all-filter" title="Apply active filter to all photos">
           Apply Filter All
         </button>
-        <button class="apply-all-btn" id="btn-apply-all-frame" title="Apply active frame to all photos">
-          Apply Frame All
-        </button>
       </div>
     ` : ''}
 
@@ -131,10 +127,6 @@ export function createEditorPage(data = {}) {
         <div class="toolbar-item ${activeTab === 'stickers' ? 'active' : ''}" data-tab="stickers">
           ${icon('sticker', 20)}
           <span>Stickers</span>
-        </div>
-        <div class="toolbar-item ${activeTab === 'frames' ? 'active' : ''}" data-tab="frames">
-          ${icon('frame', 20)}
-          <span>Frames</span>
         </div>
       </div>
     </div>
@@ -221,7 +213,6 @@ export function createEditorPage(data = {}) {
           const compositeDataUrl = await compositePhoto({
             photoSrc: rawPhotos[i],
             filterCSS: filterCSS,
-            frameId: edit.frame,
             stickers: edit.stickers,
             displayWidth: displayWidth,
           });
@@ -267,13 +258,6 @@ export function createEditorPage(data = {}) {
         photoEdits.forEach(p => (p.filter = currentFilter));
         showToast(`Filter applied to all ${rawPhotos.length} photos!`, 'success');
       });
-
-      // Apply Frame to All
-      page.querySelector('#btn-apply-all-frame')?.addEventListener('click', () => {
-        const currentFrame = photoEdits[activeIndex].frame;
-        photoEdits.forEach(p => (p.frame = currentFrame));
-        showToast(`Frame applied to all ${rawPhotos.length} photos!`, 'success');
-      });
     }
 
     // --- Toolbar Tabs Switching ---
@@ -314,18 +298,13 @@ export function createEditorPage(data = {}) {
       const edit = photoEdits[activeIndex];
       const filterObj = FILTERS.find(f => f.id === edit.filter);
 
-      // 1. Draw base photo with filter
+      // Draw base photo with filter (No frame / border overlay)
       ctx.save();
       if (filterObj && filterObj.css) {
         ctx.filter = filterObj.css;
       }
       ctx.drawImage(img, 0, 0, w, h);
       ctx.restore();
-
-      // 2. Draw frame overlay
-      if (edit.frame && edit.frame !== 'none') {
-        drawFrame(canvas, edit.frame);
-      }
     }
 
     // --- Render Interactive Sticker Overlay ---
@@ -519,36 +498,6 @@ export function createEditorPage(data = {}) {
           selectedStickerId = newSticker.id;
           renderStickerOverlay();
           showToast(`Sticker ${content} added! Drag to move.`, 'info', 1800);
-        });
-      } else if (activeTab === 'frames') {
-        panelContent.innerHTML = `
-          <div class="editor-panel-header">
-            <span class="editor-panel-title">Frames & Borders</span>
-            <span style="font-size: var(--text-xs); color: var(--text-muted);">Frame style</span>
-          </div>
-          <div class="frame-list" id="frame-list">
-            ${FRAMES.map(fr => `
-              <div class="frame-item ${fr.id === edit.frame ? 'active' : ''}" data-frame="${fr.id}">
-                <div class="frame-thumb">
-                  <span style="font-size: 24px;">${fr.icon}</span>
-                </div>
-                <span class="frame-name">${fr.name}</span>
-              </div>
-            `).join('')}
-          </div>
-        `;
-
-        panelContent.querySelector('#frame-list')?.addEventListener('click', (e) => {
-          const item = e.target.closest('.frame-item');
-          if (!item) return;
-
-          const frameId = item.dataset.frame;
-          edit.frame = frameId;
-
-          panelContent.querySelectorAll('.frame-item').forEach(el => el.classList.remove('active'));
-          item.classList.add('active');
-
-          renderMainCanvas();
         });
       }
     }

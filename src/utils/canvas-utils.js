@@ -279,16 +279,15 @@ export function createThumbnail(sourceCanvas, size = 64) {
 }
 
 /**
- * Render composite photo (Base Image + Filter + Frame + Stickers)
+ * Render composite photo (Base Image + Filter + Stickers)
  * @param {Object} options
  * @param {string} options.photoSrc - Base64 DataURL or Image URL
  * @param {string} [options.filterCSS] - CSS filter string (e.g. grayscale(100%))
- * @param {string} [options.frameId] - Frame preset ID
  * @param {Array} [options.stickers] - Array of sticker objects { content, x, y, size, rotation }
  * @param {number} [options.displayWidth] - Canvas display width for scale ratio calculation
  * @returns {Promise<string>} High-resolution DataURL of the flattened composite image
  */
-export async function compositePhoto({ photoSrc, filterCSS = 'none', frameId = 'none', stickers = [], displayWidth = 600 }) {
+export async function compositePhoto({ photoSrc, filterCSS = 'none', stickers = [], displayWidth = 600 }) {
   const img = await loadImage(photoSrc);
   const canvas = document.createElement('canvas');
   const w = img.naturalWidth || img.width || 1280;
@@ -305,12 +304,7 @@ export async function compositePhoto({ photoSrc, filterCSS = 'none', frameId = '
   ctx.drawImage(img, 0, 0, w, h);
   ctx.restore();
 
-  // 2. Draw frame overlay
-  if (frameId && frameId !== 'none') {
-    drawFrame(canvas, frameId);
-  }
-
-  // 3. Draw stickers
+  // 2. Draw stickers
   const scaleRatio = displayWidth > 0 ? (w / displayWidth) : 1;
   stickers.forEach((sticker) => {
     const actualX = (sticker.x / 100) * w;

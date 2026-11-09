@@ -1,28 +1,40 @@
 /**
  * Google Drive API Sync Module
  * Client-side OAuth 2.0 (Google Identity Services) & REST API v3 File Upload
+ * Supports explicit user sign-in, account profile retrieval, sign-out, and direct cloud sync.
  */
 
-import { getItem, setItem } from './storage.js';
+import { getItem, setItem, removeItem } from './storage.js';
 
 const CLIENT_ID_STORAGE_KEY = 'google_drive_client_id';
-const DEFAULT_CLIENT_ID = '334563760-photostudio.apps.googleusercontent.com'; // Placeholder template
+const USER_PROFILE_STORAGE_KEY = 'google_drive_user_profile';
 
 let currentAccessToken = null;
 let tokenExpirationTime = 0;
+let currentUserProfile = null;
+
+// Initialize user profile from storage if available
+try {
+  const savedProfile = getItem(USER_PROFILE_STORAGE_KEY, null);
+  if (savedProfile) {
+    currentUserProfile = typeof savedProfile === 'string' ? JSON.parse(savedProfile) : savedProfile;
+  }
+} catch {
+  currentUserProfile = null;
+}
 
 /**
- * Get stored Google Client ID or default
+ * Get stored Google Client ID or empty string
  */
 export function getStoredClientId() {
   return getItem(CLIENT_ID_STORAGE_KEY, '');
 }
 
 /**
- * Set Google Client ID
+ * Set Google Client ID in local storage
  */
 export function setStoredClientId(clientId) {
-  setItem(CLIENT_ID_STORAGE_KEY, clientId.trim());
+  setItem(CLIENT_ID_STORAGE_KEY, clientId ? clientId.trim() : '');
 }
 
 /**
@@ -33,45 +45,78 @@ export function isGisLoaded() {
 }
 
 /**
- * Request OAuth 2.0 Access Token from user
- * @param {string} clientId
- * @returns {Promise<string>} Access Token
+ * Check if user is currently connected to Google Drive
  */
-export function requestGoogleAccessToken(clientId) {
+export function isGoogleDriveConnected() {
+  return Boolean(currentAccessToken && Date.now() < tokenExpirationTime);
+}
+
+/**
+ * Get connected user profile details
+ * @returns {{ name: string, email: string, picture: string } | null}
+ */
+export function getGoogleDriveUser() {
+  return currentUserProfile;
+}
+
+/**
+ * Request OAuth 2.0 Sign In with Google Drive permissions
+ * @param {string} clientId
+ * @returns {Promise<{ accessToken: string, user: Object }>}
+ */
+export function signInGoogleDrive(clientId) {
   return new Promise((resolve, reject) => {
     if (!isGisLoaded()) {
-      return reject(new Error('Google Identity Services script is not loaded. Check internet connection.'));
+      return reject(new Error('Google Identity Services script is not loaded. Check your internet connection.'));
     }
 
     if (!clientId) {
       return reject(new Error('Google Client ID is missing. Please enter your Client ID.'));
     }
 
-    // Reuse existing valid token if not expired
-    if (currentAccessToken && Date.now() < tokenExpirationTime) {
-      return resolve(currentAccessToken);
-    }
-
     try {
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.file',
-        callback: (response) => {
+        scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+        callback: async (response) => {
           if (response.error) {
             reject(new Error(response.error_description || response.error));
-          } else if (response.access_token) {
+            return;
+          }
+
+          if (response.access_token) {
             currentAccessToken = response.access_token;
-            // expires_in is in seconds, buffer 60 seconds
             const expiresIn = parseInt(response.expires_in, 10) || 3600;
             tokenExpirationTime = Date.now() + (expiresIn - 60) * 1000;
-            resolve(currentAccessToken);
+
+            // Fetch user profile info
+            try {
+              const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${currentAccessToken}` },
+              });
+
+              if (userRes.ok) {
+                const info = await userRes.json();
+                currentUserProfile = {
+                  name: info.name || info.email || 'Google User',
+                  email: info.email || '',
+                  picture: info.picture || '',
+                };
+                setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(currentUserProfile));
+              }
+            } catch (userErr) {
+              console.warn('Failed to fetch user profile info:', userErr);
+              currentUserProfile = { name: 'Google Account', email: '', picture: '' };
+            }
+
+            resolve({ accessToken: currentAccessToken, user: currentUserProfile });
           } else {
             reject(new Error('Failed to obtain access token from Google.'));
           }
         },
       });
 
-      client.requestAccessToken();
+      client.requestAccessToken({ prompt: 'consent' });
     } catch (err) {
       reject(err);
     }
@@ -79,14 +124,51 @@ export function requestGoogleAccessToken(clientId) {
 }
 
 /**
+ * Sign out / Revoke Google Drive token
+ */
+export function signOutGoogleDrive() {
+  if (currentAccessToken && window.google?.accounts?.oauth2?.revoke) {
+    try {
+      window.google.accounts.oauth2.revoke(currentAccessToken, () => {
+        console.debug('Google token revoked');
+      });
+    } catch (err) {
+      console.warn('Error revoking token:', err);
+    }
+  }
+
+  currentAccessToken = null;
+  tokenExpirationTime = 0;
+  currentUserProfile = null;
+  removeItem(USER_PROFILE_STORAGE_KEY);
+}
+
+/**
+ * Backwards-compatible access token requester
+ */
+export async function requestGoogleAccessToken(clientId) {
+  if (isGoogleDriveConnected()) {
+    return currentAccessToken;
+  }
+  const result = await signInGoogleDrive(clientId);
+  return result.accessToken;
+}
+
+/**
  * Upload image blob to Google Drive using REST API v3 multipart upload
  * @param {Object} options
  * @param {Blob} options.blob - Image blob to upload
- * @param {string} options.filename - File name for Drive
- * @param {string} options.accessToken - Valid OAuth2 Access Token
+ * @param {string} [options.filename] - File name for Drive
+ * @param {string} [options.accessToken] - Optional OAuth2 Access Token (uses active token if omitted)
  * @returns {Promise<{ id: string, name: string, viewUrl: string }>}
  */
 export async function uploadFileToGoogleDrive({ blob, filename, accessToken }) {
+  const token = accessToken || currentAccessToken;
+
+  if (!token) {
+    throw new Error('Please sign in to Google Drive first.');
+  }
+
   const metadata = {
     name: filename || `PhotoStudio_${Date.now()}.png`,
     mimeType: 'image/png',
@@ -97,11 +179,9 @@ export async function uploadFileToGoogleDrive({ blob, filename, accessToken }) {
   const delimiter = `\r\n--${boundary}\r\n`;
   const closeDelimiter = `\r\n--${boundary}--`;
 
-  // Convert blob to base64 or read as binary arrayBuffer
   const arrayBuffer = await blob.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
 
-  // Construct multipart body
   const metaHeader = 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata);
   const mediaHeader = 'Content-Type: image/png\r\n\r\n';
 
@@ -118,7 +198,7 @@ export async function uploadFileToGoogleDrive({ blob, filename, accessToken }) {
   const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': `multipart/related; boundary=${boundary}`,
     },
     body: fullPayload,
@@ -141,4 +221,3 @@ export async function uploadFileToGoogleDrive({ blob, filename, accessToken }) {
     viewUrl: `https://drive.google.com/file/d/${result.id}/view`,
   };
 }
-

@@ -95,13 +95,6 @@ function renderVerticalStrip(canvas, ctx, images, theme, memoText, dateStr) {
 
     drawImageCover(ctx, img, marginX, y, photoW, photoH);
     ctx.restore();
-
-    // Subtle outline
-    ctx.strokeStyle = theme.border;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(marginX, y, photoW, photoH, radius);
-    ctx.stroke();
   });
 
   // Footer area
@@ -184,12 +177,6 @@ function renderGrid2x2(canvas, ctx, images, theme, memoText, dateStr) {
 
     drawImageCover(ctx, img, pos.x, pos.y, colW, colH);
     ctx.restore();
-
-    ctx.strokeStyle = theme.border;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(pos.x, pos.y, colW, colH, radius);
-    ctx.stroke();
   });
 
   // Footer
@@ -222,7 +209,7 @@ function renderGrid2x2(canvas, ctx, images, theme, memoText, dateStr) {
 }
 
 /**
- * Render Single Polaroid Card
+ * Render Single Modern Photocard (Clean & Borderless)
  */
 function renderPolaroid(canvas, ctx, img, theme, memoText, dateStr) {
   const width = 1400;
@@ -230,7 +217,7 @@ function renderPolaroid(canvas, ctx, img, theme, memoText, dateStr) {
   const marginTop = 100;
   const photoW = width - marginX * 2; // 1200px
   const photoH = Math.round(photoW * 0.85); // 1020px
-  const footerH = 440;
+  const footerH = 380;
   const height = marginTop + photoH + footerH;
 
   canvas.width = width;
@@ -240,11 +227,6 @@ function renderPolaroid(canvas, ctx, img, theme, memoText, dateStr) {
   ctx.fillStyle = theme.bg;
   ctx.fillRect(0, 0, width, height);
 
-  // Outer border line
-  ctx.strokeStyle = theme.border;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(10, 10, width - 20, height - 20);
-
   // Draw Photo
   if (img) {
     ctx.save();
@@ -252,19 +234,13 @@ function renderPolaroid(canvas, ctx, img, theme, memoText, dateStr) {
     ctx.shadowBlur = 24;
     ctx.shadowOffsetY = 6;
 
-    const radius = 12;
+    const radius = 20;
     ctx.beginPath();
     ctx.roundRect(marginX, marginTop, photoW, photoH, radius);
     ctx.clip();
 
     drawImageCover(ctx, img, marginX, marginTop, photoW, photoH);
     ctx.restore();
-
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(marginX, marginTop, photoW, photoH, radius);
-    ctx.stroke();
   }
 
   // Footer Memo & Date
@@ -275,22 +251,22 @@ function renderPolaroid(canvas, ctx, img, theme, memoText, dateStr) {
   if (memoText && memoText.trim()) {
     ctx.fillStyle = theme.text;
     ctx.font = '600 48px "Inter", cursive, sans-serif';
-    ctx.fillText(`"${memoText.trim()}"`, width / 2, footerY + 160);
+    ctx.fillText(`"${memoText.trim()}"`, width / 2, footerY + 140);
 
     ctx.fillStyle = theme.subtext;
     ctx.font = '400 30px "Space Grotesk", sans-serif';
     ctx.letterSpacing = '4px';
-    ctx.fillText(dateStr, width / 2, footerY + 240);
+    ctx.fillText(dateStr, width / 2, footerY + 210);
   } else {
     ctx.fillStyle = theme.text;
     ctx.font = '700 44px "Space Grotesk", sans-serif';
     ctx.letterSpacing = '6px';
-    ctx.fillText('✦ PHOTO STUDIO ✦', width / 2, footerY + 160);
+    ctx.fillText('✦ PHOTO STUDIO ✦', width / 2, footerY + 140);
 
     ctx.fillStyle = theme.subtext;
     ctx.font = '400 30px "Space Grotesk", sans-serif';
     ctx.letterSpacing = '4px';
-    ctx.fillText(dateStr, width / 2, footerY + 230);
+    ctx.fillText(dateStr, width / 2, footerY + 210);
   }
 
   ctx.restore();

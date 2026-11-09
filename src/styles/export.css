@@ -129,7 +129,7 @@
   width: 100%;
   max-width: 480px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
   animation: slideUp var(--duration-slow) var(--ease-out) 200ms both;
 }
@@ -138,8 +138,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-6);
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
   background: var(--bg-surface);
   border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
@@ -158,13 +158,13 @@
 }
 
 .export-action-icon {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .export-action-icon.print {
@@ -177,24 +177,139 @@
   color: var(--accent-secondary);
 }
 
-.export-action-icon.drive {
-  background: var(--success-dim);
-  color: var(--success);
-}
-
 .export-action-icon.download {
   background: var(--warning-dim);
   color: var(--warning);
 }
 
 .export-action-label {
-  font-weight: 500;
-  font-size: var(--text-sm);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  color: var(--text-primary);
 }
 
 .export-action-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* --- Dedicated Google Drive Sync Card --- */
+.gdrive-sync-card {
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: slideUp var(--duration-slow) var(--ease-out) 250ms both;
+}
+
+.gdrive-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gdrive-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.gdrive-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+  background: var(--glass);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gdrive-icon-badge.connected {
+  background: var(--success-dim);
+  color: var(--success);
+}
+
+.gdrive-card-title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gdrive-status-text {
   font-size: var(--text-xs);
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.disconnected {
+  background: var(--text-muted);
+}
+
+.status-dot.connected {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.gdrive-email-subtext {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  background: var(--glass);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  align-self: flex-start;
+}
+
+.gdrive-card-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.gdrive-card-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.gdrive-card-actions.connected {
+  align-items: center;
+}
+
+.btn-config-client {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  opacity: 0.6;
+  transition: opacity var(--duration-fast);
+}
+
+.btn-config-client:hover {
+  opacity: 1;
+}
+
+.w-full {
+  width: 100%;
 }
 
 /* --- Share Modal --- */
@@ -250,12 +365,12 @@
   }
   
   .export-actions {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-2);
   }
   
   .export-action-btn {
-    padding: var(--space-4);
+    padding: var(--space-3) var(--space-1);
   }
   
   .share-options {
