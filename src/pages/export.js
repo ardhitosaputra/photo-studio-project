@@ -1,18 +1,19 @@
 /**
- * Export & Share Page
+ * Export & Share Page (Monochrome Edition)
  * Features:
- * - Unified Photocard Layout Canvas Engine (Strip, Grid 2x2, Single)
- * - Customizer: Card theme colors & memo/caption text
- * - High-Res Unified Photocard PNG Download & Individual Shots Download
- * - Print-Ready Output with CSS @media print
- * - Social Media Sharing (Web Share API, Clipboard Copy, WhatsApp, Twitter, Facebook)
+ * - Dynamic Photocard Layout Selection at the End Stage (Strip, Grid, Polaroid, Duo)
+ * - Monochrome Card Themes (Classic White, Midnight Black, Paper Gray, Dark Charcoal)
+ * - Custom Memo / Caption Input
+ * - High-Res PNG Download & Individual Shots Download
+ * - Print-Ready Output
+ * - Social Media Sharing & Clipboard Copy
  */
 
 import { router } from '../router.js';
 import { icon } from '../utils/icons.js';
 import { showToast } from '../components/toast.js';
 import { showModal, closeModal } from '../components/modal.js';
-import { CAPTURE_MODE, CAPTURE_CONFIG, LAYOUTS } from '../utils/constants.js';
+import { CAPTURE_MODE, CAPTURE_CONFIG, LAYOUT_OPTIONS } from '../utils/constants.js';
 import { renderPhotocard, CARD_THEMES } from '../utils/photocard.js';
 
 export function createExportPage(data = {}) {
@@ -54,8 +55,12 @@ export function createExportPage(data = {}) {
     return page;
   }
 
-  // --- State ---
-  let selectedLayout = mode === CAPTURE_MODE.STRIP ? 'strip' : (mode === CAPTURE_MODE.GRID ? 'grid' : 'single');
+  // --- Dynamic Layout Options based on Shot Count ---
+  const photoCount = finalPhotos.length;
+  const availableLayouts = LAYOUT_OPTIONS[photoCount] ||
+    (photoCount === 2 ? LAYOUT_OPTIONS[2] : (photoCount >= 4 ? LAYOUT_OPTIONS[4] : LAYOUT_OPTIONS[1]));
+
+  let selectedLayout = availableLayouts[0]?.id || 'polaroid';
   let selectedThemeId = 'white';
   let memoText = '';
   let currentPhotocard = null; // { canvas, dataUrl, blob }
@@ -70,10 +75,10 @@ export function createExportPage(data = {}) {
       </button>
       <div style="display: flex; align-items: center; gap: var(--space-2);">
         <span class="export-title">Export &amp; Share</span>
-        <span class="badge">${config.icon} ${config.label}</span>
+        <span class="badge">${config.icon} ${config.label} (${photoCount} ${photoCount === 1 ? 'Shot' : 'Shots'})</span>
       </div>
       <button class="btn btn-ghost" id="btn-new">
-        <span>New Photo</span>
+        <span>New Session</span>
       </button>
     </div>
 
@@ -85,31 +90,29 @@ export function createExportPage(data = {}) {
         <img id="photocard-preview-img" alt="Generated Photocard" style="display: none; max-width: 100%; max-height: 68vh; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); object-fit: contain;" />
       </div>
 
-      <!-- Layout Selector (if multiple photos) -->
-      ${finalPhotos.length > 1 ? `
-        <div class="layout-section no-print">
-          <h3>Photocard Layout</h3>
-          <div class="layout-options" id="layout-options">
-            ${LAYOUTS.map(l => `
-              <div class="layout-option ${l.id === selectedLayout ? 'active' : ''}" data-layout="${l.id}">
-                <div class="layout-icon">${l.icon}</div>
-                <div class="layout-label">${l.name}</div>
-              </div>
-            `).join('')}
-          </div>
+      <!-- Layout & Frame Selector (Available at this Final Stage) -->
+      <div class="layout-section no-print">
+        <h3>Choose Layout &amp; Frame</h3>
+        <div class="layout-options" id="layout-options">
+          ${availableLayouts.map(l => `
+            <div class="layout-option ${l.id === selectedLayout ? 'active' : ''}" data-layout="${l.id}">
+              <div class="layout-icon">${l.icon}</div>
+              <div class="layout-label">${l.name}</div>
+            </div>
+          `).join('')}
         </div>
-      ` : ''}
+      </div>
 
-      <!-- Customizer: Color Theme & Memo Caption -->
+      <!-- Customizer: Monochrome Theme & Memo Caption -->
       <div class="card-customizer no-print">
         <div class="customizer-row">
-          <span class="customizer-label">Card Color Theme</span>
+          <span class="customizer-label">Card Theme (Monochrome)</span>
           <div class="theme-swatches" id="theme-swatches">
             ${CARD_THEMES.map(t => `
               <div class="theme-swatch ${t.id === selectedThemeId ? 'active' : ''}"
                    data-theme="${t.id}"
                    title="${t.name}"
-                   style="background-color: ${t.bg}; ${t.id === 'white' ? 'border: 1px solid #d1d5db;' : ''}">
+                   style="background-color: ${t.bg}; border: 1px solid ${t.border};">
               </div>
             `).join('')}
           </div>
@@ -117,7 +120,7 @@ export function createExportPage(data = {}) {
 
         <div class="customizer-row">
           <span class="customizer-label">Custom Caption / Memo (Optional)</span>
-          <input type="text" class="memo-input" id="memo-input" placeholder="e.g. Best day with besties ✨" maxlength="45" value="${memoText}" />
+          <input type="text" class="memo-input" id="memo-input" placeholder="e.g. Noir moment in the studio ✦" maxlength="45" value="${memoText}" />
         </div>
       </div>
 
@@ -132,13 +135,13 @@ export function createExportPage(data = {}) {
         <button class="export-action-btn" id="btn-print" title="Print physical photocard">
           <div class="export-action-icon print">${icon('printer', 24)}</div>
           <div class="export-action-label">Print</div>
-          <div class="export-action-desc">Ready for printer</div>
+          <div class="export-action-desc">Print Ready</div>
         </button>
 
         <button class="export-action-btn" id="btn-share" title="Share to social media">
           <div class="export-action-icon share">${icon('share', 24)}</div>
           <div class="export-action-label">Share</div>
-          <div class="export-action-desc">Socials &amp; copy</div>
+          <div class="export-action-desc">Socials &amp; Copy</div>
         </button>
       </div>
 
@@ -233,7 +236,7 @@ export function createExportPage(data = {}) {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         updatePhotocard();
-      }, 350);
+      }, 300);
     });
 
     // --- Download Compiled Photocard ---
@@ -277,12 +280,12 @@ export function createExportPage(data = {}) {
 
       const file = new File([currentPhotocard.blob], `PhotoStudio_${Date.now()}.png`, { type: 'image/png' });
 
-      // Check Mobile Native Web Share API
+      // Mobile Native Web Share API
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             title: 'My Photo Studio Photocard',
-            text: 'Look at my aesthetic photocard! Made with Photo Studio #PhotoStudio #Photobooth',
+            text: 'Look at my minimalist noir photocard! Made with Photo Studio #PhotoStudio #Noir',
             files: [file],
           });
           showToast('Shared successfully!', 'success');
@@ -308,7 +311,7 @@ export function createExportPage(data = {}) {
  * Open Desktop / Fallback Share Modal
  */
 function openShareModal(photocard) {
-  const shareText = encodeURIComponent('Look at my aesthetic photocard! Made with Photo Studio #PhotoStudio #Photobooth');
+  const shareText = encodeURIComponent('Look at my minimalist noir photocard! Made with Photo Studio #PhotoStudio #Noir');
   const shareUrl = encodeURIComponent(window.location.origin);
 
   const modalBody = document.createElement('div');

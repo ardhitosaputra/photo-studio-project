@@ -52,7 +52,7 @@ export function createEditorPage(data = {}) {
   // --- Editor State ---
   let activeIndex = 0;
   let activeTab = 'filters'; // 'filters' | 'stickers' | null
-  let activeStickerCategory = 'emoji';
+  let activeStickerCategory = 'symbols';
   let selectedStickerId = null;
   let isCompositing = false;
 

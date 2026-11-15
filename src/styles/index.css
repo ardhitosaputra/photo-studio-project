@@ -22,23 +22,23 @@
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-hover: rgba(255, 255, 255, 0.07);
 
-  --accent: #a78bfa;
-  --accent-dim: rgba(167, 139, 250, 0.15);
-  --accent-glow: rgba(167, 139, 250, 0.3);
-  --accent-secondary: #60a5fa;
-  --accent-secondary-dim: rgba(96, 165, 250, 0.15);
+  --accent: #ffffff;
+  --accent-dim: rgba(255, 255, 255, 0.15);
+  --accent-glow: rgba(255, 255, 255, 0.25);
+  --accent-secondary: #d4d4d8;
+  --accent-secondary-dim: rgba(212, 212, 216, 0.15);
 
-  --text-primary: #fafafa;
+  --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
-  --text-accent: #a78bfa;
+  --text-accent: #ffffff;
 
-  --success: #4ade80;
-  --success-dim: rgba(74, 222, 128, 0.15);
-  --warning: #fbbf24;
-  --warning-dim: rgba(251, 191, 36, 0.15);
-  --error: #f87171;
-  --error-dim: rgba(248, 113, 113, 0.15);
+  --success: #ffffff;
+  --success-dim: rgba(255, 255, 255, 0.15);
+  --warning: #e4e4e7;
+  --warning-dim: rgba(228, 228, 231, 0.15);
+  --error: #a1a1aa;
+  --error-dim: rgba(161, 161, 170, 0.15);
 
   /* Typography */
   --font-display: 'Space Grotesk', system-ui, sans-serif;

@@ -73,6 +73,7 @@
   user-select: none;
   -webkit-user-select: none;
   transition: box-shadow var(--duration-fast);
+  filter: grayscale(100%);
 }
 
 .sticker-item:active {
@@ -258,7 +259,7 @@
 .sticker-category-btn.active {
   background: var(--accent-dim);
   color: var(--accent);
-  border-color: rgba(167, 139, 250, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .sticker-grid {
@@ -278,9 +279,10 @@
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-out);
-  font-size: 28px;
+  font-size: 26px;
   border: 1px solid transparent;
   user-select: none;
+  filter: grayscale(100%);
 }
 
 .sticker-picker-item:hover {

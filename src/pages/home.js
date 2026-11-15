@@ -1,5 +1,5 @@
 /**
- * Home / Landing Page
+ * Home / Landing Page (Monochrome Edition)
  */
 
 import { router } from '../router.js';
@@ -10,7 +10,7 @@ export function createHomePage() {
   const page = document.createElement('div');
   page.className = 'home-page';
   
-  // Selected capture mode
+  // Selected capture mode (Default: Single Shot)
   let selectedMode = CAPTURE_MODE.SINGLE;
 
   page.innerHTML = `
@@ -23,7 +23,7 @@ export function createHomePage() {
     <!-- Content -->
     <div class="home-content">
       <div class="home-badge">
-        <span class="badge">${icon('sparkles', 14)} Premium Photobooth</span>
+        <span class="badge">${icon('sparkles', 14)} Minimalist Photobooth</span>
       </div>
 
       <h1 class="home-title">
@@ -32,9 +32,10 @@ export function createHomePage() {
 
       <p class="home-subtitle">
         ${APP_TAGLINE}<br/>
-        Transform your moments with filters, stickers, and frames — all in your browser.
+        Choose your session shots below. Layout and frame are styled at the end.
       </p>
 
+      <!-- Shoot Mode Selector (1, 2, or 4 Shots) -->
       <div class="mode-selector" id="mode-selector">
         ${Object.entries(CAPTURE_CONFIG).map(([mode, config]) => `
           <div class="mode-option ${mode === selectedMode ? 'active' : ''}" data-mode="${mode}">
@@ -56,7 +57,7 @@ export function createHomePage() {
     </div>
 
     <div class="home-footer">
-      Built with ✦ by Photo Studio
+      Built with ✦ by Photo Studio Noir
     </div>
   `;
 
@@ -79,7 +80,7 @@ export function createHomePage() {
       router.navigate('camera', { mode: selectedMode });
     });
 
-    // Generate particles
+    // Generate monochrome floating particles
     createParticles(page.querySelector('#home-particles'));
   });
 
@@ -87,21 +88,22 @@ export function createHomePage() {
 }
 
 /**
- * Create floating particles in the background
+ * Create floating monochrome particles in the background
  */
 function createParticles(container) {
-  const count = 20;
+  if (!container) return;
+  const count = 24;
   for (let i = 0; i < count; i++) {
     const particle = document.createElement('div');
     particle.className = 'particle';
     
     const x = Math.random() * 100;
     const y = Math.random() * 100;
-    const dx = (Math.random() - 0.5) * 200;
-    const dy = -(Math.random() * 300 + 100);
-    const duration = 5 + Math.random() * 10;
-    const delay = Math.random() * 10;
-    const size = 2 + Math.random() * 4;
+    const dx = (Math.random() - 0.5) * 160;
+    const dy = -(Math.random() * 260 + 80);
+    const duration = 6 + Math.random() * 8;
+    const delay = Math.random() * 6;
+    const size = 1.5 + Math.random() * 3;
     
     particle.style.cssText = `
       left: ${x}%;
@@ -112,7 +114,8 @@ function createParticles(container) {
       --dy: ${dy}px;
       animation-duration: ${duration}s;
       animation-delay: ${delay}s;
-      background: ${Math.random() > 0.5 ? 'var(--accent)' : 'var(--accent-secondary)'};
+      background: ${Math.random() > 0.4 ? 'rgba(255, 255, 255, 0.85)' : 'rgba(200, 200, 200, 0.4)'};
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
     `;
     
     container.appendChild(particle);

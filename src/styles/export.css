@@ -168,18 +168,18 @@
 }
 
 .export-action-icon.print {
-  background: var(--accent-dim);
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .export-action-icon.share {
-  background: var(--accent-secondary-dim);
-  color: var(--accent-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  color: #d4d4d8;
 }
 
 .export-action-icon.download {
-  background: var(--warning-dim);
-  color: var(--warning);
+  background: #ffffff;
+  color: #000000;
 }
 
 .export-action-label {

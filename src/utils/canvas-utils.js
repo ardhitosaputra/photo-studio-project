@@ -316,9 +316,12 @@ export async function compositePhoto({ photoSrc, filterCSS = 'none', stickers = 
     if (sticker.rotation) {
       ctx.rotate((sticker.rotation * Math.PI) / 180);
     }
-    ctx.font = `${actualSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    // Force monochrome on stickers & stamps
+    ctx.filter = 'grayscale(100%)';
+    ctx.font = `${actualSize}px "Space Grotesk", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
     ctx.fillText(sticker.content, 0, 0);
     ctx.restore();
   });

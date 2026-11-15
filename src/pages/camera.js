@@ -239,11 +239,21 @@ export function createCameraPage(data = {}) {
       flash.classList.add('active');
       setTimeout(() => flash.classList.remove('active'), 300);
       
-      // Capture frame from video or fallback canvas
-      const width = video.videoWidth || 1280;
-      const height = video.videoHeight || 960;
-      canvas.width = width;
-      canvas.height = height;
+      // Capture frame from video with exact 4:3 aspect ratio matching the preview
+      const vw = video.videoWidth || 1280;
+      const vh = video.videoHeight || 960;
+      const targetAspect = 4 / 3;
+      let sx = 0, sy = 0, sw = vw, sh = vh;
+      if (vw / vh > targetAspect) {
+        sw = vh * targetAspect;
+        sx = (vw - sw) / 2;
+      } else {
+        sh = vw / targetAspect;
+        sy = (vh - sh) / 2;
+      }
+
+      canvas.width = 1280;
+      canvas.height = 960;
       const ctx = canvas.getContext('2d');
       
       // Mirror if front camera
@@ -251,7 +261,7 @@ export function createCameraPage(data = {}) {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
       }
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       
       const dataUrl = canvas.toDataURL('image/png');
