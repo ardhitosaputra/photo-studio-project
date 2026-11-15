@@ -76,6 +76,10 @@
   filter: grayscale(100%);
 }
 
+.sticker-item.text-item {
+  filter: none;
+}
+
 .sticker-item:active {
   cursor: grabbing;
 }
@@ -392,4 +396,97 @@
   color: var(--text-primary);
   background: var(--glass-hover);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Custom Text Panel --- */
+.text-editor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.text-input-group {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.custom-text-input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition: border-color var(--duration-fast);
+}
+
+.custom-text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.font-options-row {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+
+.font-options-row::-webkit-scrollbar {
+  display: none;
+}
+
+.font-option-btn {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.font-option-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.font-option-btn.active {
+  border-color: #ffffff;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.text-color-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.text-color-swatches {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.text-color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--duration-fast);
+  border: 2px solid transparent;
+}
+
+.text-color-btn:hover {
+  transform: scale(1.15);
+}
+
+.text-color-btn.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
 }

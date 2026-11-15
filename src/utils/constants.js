@@ -57,16 +57,16 @@ export const STICKERS = {
     { id: 'p7', content: '☕', label: 'Coffee' },
     { id: 'p8', content: '🎀', label: 'Ribbon' },
   ],
-  stamps: [
-    { id: 't1', content: 'NOIR', label: 'Noir' },
-    { id: 't2', content: 'VIBE', label: 'Vibe' },
-    { id: 't3', content: 'STUDIO', label: 'Studio' },
-    { id: 't4', content: 'MEMO', label: 'Memo' },
-    { id: 't5', content: 'B&W', label: 'B&W' },
-    { id: 't6', content: 'CLASSIC', label: 'Classic' },
-    { id: 't7', content: '✦ ✦ ✦', label: 'Triple Spark' },
-  ],
 };
+
+// Available Fonts for Text Insertion Feature
+export const TEXT_FONTS = [
+  { id: 'space', name: 'Display', fontFamily: "'Space Grotesk', sans-serif" },
+  { id: 'serif', name: 'Serif', fontFamily: "'Playfair Display', Georgia, serif" },
+  { id: 'handwriting', name: 'Script', fontFamily: "'Caveat', cursive" },
+  { id: 'typewriter', name: 'Typewriter', fontFamily: "'Courier Prime', monospace" },
+  { id: 'clean', name: 'Sans', fontFamily: "'Inter', sans-serif" },
+];
 
 // Dynamic Layout options for the Export page (determined by photo count)
 export const LAYOUT_OPTIONS = {

@@ -7,7 +7,7 @@
 import { router } from '../router.js';
 import { icon } from '../utils/icons.js';
 import { showToast } from '../components/toast.js';
-import { CAPTURE_MODE, CAPTURE_CONFIG, FILTERS, STICKERS } from '../utils/constants.js';
+import { CAPTURE_MODE, CAPTURE_CONFIG, FILTERS, STICKERS, TEXT_FONTS } from '../utils/constants.js';
 import { compositePhoto, loadImage } from '../utils/canvas-utils.js';
 
 export function createEditorPage(data = {}) {
@@ -51,10 +51,13 @@ export function createEditorPage(data = {}) {
 
   // --- Editor State ---
   let activeIndex = 0;
-  let activeTab = 'filters'; // 'filters' | 'stickers' | null
+  let activeTab = 'filters'; // 'filters' | 'stickers' | 'text' | null
   let activeStickerCategory = 'symbols';
   let selectedStickerId = null;
   let isCompositing = false;
+  let activeFontId = 'space';
+  let activeTextColor = '#ffffff';
+  let textInputValue = '';
 
   // Individual edit state for each photo
   const photoEdits = rawPhotos.map(() => ({
@@ -127,6 +130,10 @@ export function createEditorPage(data = {}) {
         <div class="toolbar-item ${activeTab === 'stickers' ? 'active' : ''}" data-tab="stickers">
           ${icon('sticker', 20)}
           <span>Stickers</span>
+        </div>
+        <div class="toolbar-item ${activeTab === 'text' ? 'active' : ''}" data-tab="text">
+          ${icon('type', 20)}
+          <span>Text</span>
         </div>
       </div>
     </div>
@@ -307,26 +314,37 @@ export function createEditorPage(data = {}) {
       ctx.restore();
     }
 
-    // --- Render Interactive Sticker Overlay ---
+    // --- Render Interactive Sticker & Text Overlay ---
     function renderStickerOverlay() {
       stickerContainer.innerHTML = '';
       const edit = photoEdits[activeIndex];
 
       edit.stickers.forEach((sticker) => {
         const el = document.createElement('div');
-        el.className = `sticker-item ${sticker.id === selectedStickerId ? 'selected' : ''}`;
+        const isText = sticker.type === 'text';
+        el.className = `sticker-item ${isText ? 'text-item' : ''} ${sticker.id === selectedStickerId ? 'selected' : ''}`;
         el.dataset.id = sticker.id;
 
         el.style.left = `${sticker.x}%`;
         el.style.top = `${sticker.y}%`;
         el.style.transform = `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg)`;
-        el.style.fontSize = `${sticker.size || 48}px`;
+        el.style.fontSize = `${sticker.size || (isText ? 36 : 48)}px`;
 
-        el.innerHTML = `
-          <span>${sticker.content}</span>
-          <div class="sticker-delete" title="Delete sticker">✕</div>
-          <div class="sticker-resize" title="Resize sticker"></div>
-        `;
+        if (isText) {
+          el.innerHTML = `
+            <span style="font-family: ${sticker.font || "'Space Grotesk', sans-serif"}; color: ${sticker.color || '#ffffff'}; text-shadow: 0 2px 8px ${sticker.color === '#000000' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.85)'}; font-weight: 600; white-space: nowrap; line-height: 1.1; user-select: none;">
+              ${sticker.content}
+            </span>
+            <div class="sticker-delete" title="Delete text">✕</div>
+            <div class="sticker-resize" title="Resize text"></div>
+          `;
+        } else {
+          el.innerHTML = `
+            <span>${sticker.content}</span>
+            <div class="sticker-delete" title="Delete sticker">✕</div>
+            <div class="sticker-resize" title="Resize sticker"></div>
+          `;
+        }
 
         setupStickerInteractions(el, sticker, wrapper);
         stickerContainer.appendChild(el);
@@ -498,6 +516,103 @@ export function createEditorPage(data = {}) {
           selectedStickerId = newSticker.id;
           renderStickerOverlay();
           showToast(`Sticker ${content} added! Drag to move.`, 'info', 1800);
+        });
+      } else if (activeTab === 'text') {
+        panelContent.innerHTML = `
+          <div class="editor-panel-header">
+            <span class="editor-panel-title">Add Custom Text</span>
+            <span style="font-size: var(--text-xs); color: var(--text-muted);">${edit.stickers.filter(s => s.type === 'text').length} texts on photo</span>
+          </div>
+
+          <div class="text-editor-controls">
+            <!-- Text Input Row -->
+            <div class="text-input-group">
+              <input type="text" class="custom-text-input" id="custom-text-input" placeholder="Type text here..." maxlength="40" value="${textInputValue}" />
+              <button class="btn btn-primary btn-sm" id="btn-add-custom-text">
+                ${icon('check', 16)} Add
+              </button>
+            </div>
+
+            <!-- Font Selector Row -->
+            <div class="font-options-row" id="font-options-row">
+              ${TEXT_FONTS.map(f => `
+                <button class="font-option-btn ${f.id === activeFontId ? 'active' : ''}" data-font="${f.id}" style="font-family: ${f.fontFamily};">
+                  ${f.name}
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- Color Options Row -->
+            <div class="text-color-row">
+              <span style="font-size: var(--text-xs); color: var(--text-secondary); font-weight: 500;">Color:</span>
+              <div class="text-color-swatches" id="text-color-swatches">
+                <button class="text-color-btn ${activeTextColor === '#ffffff' ? 'active' : ''}" data-color="#ffffff" title="White" style="background: #ffffff;"></button>
+                <button class="text-color-btn ${activeTextColor === '#000000' ? 'active' : ''}" data-color="#000000" title="Black" style="background: #000000; border: 1px solid #555;"></button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const textInput = panelContent.querySelector('#custom-text-input');
+        const addBtn = panelContent.querySelector('#btn-add-custom-text');
+        const fontRow = panelContent.querySelector('#font-options-row');
+        const colorSwatches = panelContent.querySelector('#text-color-swatches');
+
+        textInput?.addEventListener('input', (e) => {
+          textInputValue = e.target.value;
+        });
+
+        textInput?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addBtn?.click();
+          }
+        });
+
+        fontRow?.addEventListener('click', (e) => {
+          const btn = e.target.closest('.font-option-btn');
+          if (!btn) return;
+          activeFontId = btn.dataset.font;
+          fontRow.querySelectorAll('.font-option-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+
+        colorSwatches?.addEventListener('click', (e) => {
+          const btn = e.target.closest('.text-color-btn');
+          if (!btn) return;
+          activeTextColor = btn.dataset.color;
+          colorSwatches.querySelectorAll('.text-color-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+
+        addBtn?.addEventListener('click', () => {
+          const content = (textInput?.value || textInputValue).trim();
+          if (!content) {
+            showToast('Please type some text first', 'warning');
+            textInput?.focus();
+            return;
+          }
+
+          const selectedFontObj = TEXT_FONTS.find(f => f.id === activeFontId) || TEXT_FONTS[0];
+          const newTextSticker = {
+            id: 'txt_' + Date.now(),
+            type: 'text',
+            content: content,
+            font: selectedFontObj.fontFamily,
+            color: activeTextColor,
+            x: 50,
+            y: 50,
+            size: 38,
+            rotation: 0,
+          };
+
+          edit.stickers.push(newTextSticker);
+          selectedStickerId = newTextSticker.id;
+          textInputValue = '';
+          if (textInput) textInput.value = '';
+
+          renderStickerOverlay();
+          showToast(`Added text "${content}"! Drag to reposition.`, 'success', 2000);
         });
       }
     }

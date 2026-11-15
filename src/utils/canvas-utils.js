@@ -316,13 +316,27 @@ export async function compositePhoto({ photoSrc, filterCSS = 'none', stickers = 
     if (sticker.rotation) {
       ctx.rotate((sticker.rotation * Math.PI) / 180);
     }
-    // Force monochrome on stickers & stamps
-    ctx.filter = 'grayscale(100%)';
-    ctx.font = `${actualSize}px "Space Grotesk", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(sticker.content, 0, 0);
+
+    if (sticker.type === 'text') {
+      const font = sticker.font || "'Space Grotesk', sans-serif";
+      ctx.font = `600 ${actualSize}px ${font}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = sticker.color || '#ffffff';
+
+      // Subtle drop shadow for high contrast on photos
+      ctx.shadowColor = sticker.color === '#000000' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 6;
+      ctx.fillText(sticker.content, 0, 0);
+    } else {
+      // Force monochrome on symbols & props
+      ctx.filter = 'grayscale(100%)';
+      ctx.font = `${actualSize}px "Space Grotesk", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(sticker.content, 0, 0);
+    }
     ctx.restore();
   });
 

@@ -183,13 +183,13 @@ function renderVerticalStrip2(canvas, ctx, images, theme, memoText, dateStr) {
  * Render Side-by-Side Duo Split Photocard (2 Photos)
  */
 function renderDuoSplit(canvas, ctx, images, theme, memoText, dateStr) {
-  const width = 2400;
-  const marginX = 100;
-  const marginTop = 100;
-  const gap = 60;
-  const colW = (width - marginX * 2 - gap) / 2; // 1070px
-  const colH = Math.round(colW * 0.75); // 802px (4:3 aspect ratio, exact match with camera)
-  const footerH = 340;
+  const width = 2200;
+  const marginX = 90;
+  const marginTop = 90;
+  const gap = 50;
+  const colW = (width - marginX * 2 - gap) / 2; // ~985px
+  const colH = Math.round(colW * 1.15); // portrait proportion for duo
+  const footerH = 320;
   const height = marginTop + colH + footerH;
 
   canvas.width = width;
