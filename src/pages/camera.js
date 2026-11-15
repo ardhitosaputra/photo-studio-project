@@ -30,7 +30,7 @@ export function createCameraPage(data = {}) {
         ${icon('arrowLeft', 20)}
         <span>Back</span>
       </button>
-      <div class="badge">${config.icon} ${config.label}</div>
+      <div class="badge" style="gap: 6px;">${icon(config.iconName || 'camera', 14)} <span>${config.label}</span></div>
       <div class="camera-header-actions">
         <button class="control-btn" id="btn-mute" title="Toggle Sound">
           ${icon(isAudioMuted() ? 'volumeX' : 'volume2', 20)}

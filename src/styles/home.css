@@ -137,6 +137,12 @@
   background: var(--bg-surface);
   border-radius: var(--radius-lg);
   font-size: 24px;
+  color: var(--text-primary);
+}
+
+.mode-option .mode-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .mode-option.active .mode-icon {

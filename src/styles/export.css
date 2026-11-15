@@ -108,6 +108,12 @@
   background: var(--bg-elevated);
   border-radius: var(--radius-lg);
   font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.layout-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 .layout-option.active .layout-icon {

@@ -14,9 +14,9 @@ export const CAPTURE_MODE = {
 
 // Capture mode configs for Landing Page
 export const CAPTURE_CONFIG = {
-  [CAPTURE_MODE.SINGLE]: { shots: 1, label: 'Single Shot', icon: '📸', desc: '1 Photo' },
-  [CAPTURE_MODE.TWO_SHOT]: { shots: 2, label: '2 Shots', icon: '✌️', desc: '2 Photos' },
-  [CAPTURE_MODE.FOUR_SHOT]: { shots: 4, label: '4 Shots', icon: '🎞️', desc: '4 Photos' },
+  [CAPTURE_MODE.SINGLE]: { shots: 1, label: 'Single Shot', iconName: 'singleShot', desc: '1 Photo' },
+  [CAPTURE_MODE.TWO_SHOT]: { shots: 2, label: '2 Shots', iconName: 'twoShot', desc: '2 Photos' },
+  [CAPTURE_MODE.FOUR_SHOT]: { shots: 4, label: '4 Shots', iconName: 'fourShot', desc: '4 Photos' },
 };
 
 // Filter presets (Curated Monochrome & Noir grading)
@@ -71,17 +71,17 @@ export const STICKERS = {
 // Dynamic Layout options for the Export page (determined by photo count)
 export const LAYOUT_OPTIONS = {
   1: [
-    { id: 'polaroid', name: 'Polaroid', icon: '🖼️', desc: 'Classic Polaroid' },
-    { id: 'minimal', name: 'Minimal Card', icon: '▢', desc: 'Sleek Border' },
-    { id: 'borderless', name: 'Borderless', icon: '◻️', desc: 'Full Bleed' },
+    { id: 'polaroid', name: 'Polaroid', iconName: 'layoutPolaroid', desc: 'Classic Polaroid' },
+    { id: 'minimal', name: 'Minimal Card', iconName: 'layoutMinimal', desc: 'Sleek Border' },
+    { id: 'borderless', name: 'Borderless', iconName: 'layoutBorderless', desc: 'Full Bleed' },
   ],
   2: [
-    { id: 'strip_2', name: '2-Cut Strip', icon: '🎞️', desc: 'Vertical Duo' },
-    { id: 'duo_card', name: 'Duo Split', icon: '▥', desc: 'Side by Side' },
+    { id: 'strip_2', name: '2-Cut Strip', iconName: 'layoutStrip2', desc: 'Vertical Duo' },
+    { id: 'duo_card', name: 'Duo Split', iconName: 'layoutDuo', desc: 'Side by Side' },
   ],
   4: [
-    { id: 'strip_4', name: '4-Cut Strip', icon: '🎞️', desc: 'Classic Photobooth' },
-    { id: 'grid_2x2', name: '2×2 Grid', icon: '⊞', desc: 'Quad Grid' },
+    { id: 'strip_4', name: '4-Cut Strip', iconName: 'layoutStrip4', desc: 'Classic Photobooth' },
+    { id: 'grid_2x2', name: '2×2 Grid', iconName: 'layoutGrid2x2', desc: 'Quad Grid' },
   ],
 };
 

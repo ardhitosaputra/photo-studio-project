@@ -75,7 +75,7 @@ export function createExportPage(data = {}) {
       </button>
       <div style="display: flex; align-items: center; gap: var(--space-2);">
         <span class="export-title">Export &amp; Share</span>
-        <span class="badge">${config.icon} ${config.label} (${photoCount} ${photoCount === 1 ? 'Shot' : 'Shots'})</span>
+        <span class="badge" style="gap: 6px;">${icon(config.iconName || 'camera', 14)} <span>${config.label} (${photoCount} ${photoCount === 1 ? 'Shot' : 'Shots'})</span></span>
       </div>
       <button class="btn btn-ghost" id="btn-new">
         <span>New Session</span>
@@ -96,7 +96,7 @@ export function createExportPage(data = {}) {
         <div class="layout-options" id="layout-options">
           ${availableLayouts.map(l => `
             <div class="layout-option ${l.id === selectedLayout ? 'active' : ''}" data-layout="${l.id}">
-              <div class="layout-icon">${l.icon}</div>
+              <div class="layout-icon">${icon(l.iconName || 'frame', 22)}</div>
               <div class="layout-label">${l.name}</div>
             </div>
           `).join('')}
@@ -328,7 +328,7 @@ function openShareModal(photocard) {
 
     <!-- WhatsApp Intent -->
     <a href="https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener noreferrer" class="share-option">
-      <div class="share-option-icon whatsapp">💬</div>
+      <div class="share-option-icon">${icon('message', 20)}</div>
       <div>
         <div class="share-option-name">WhatsApp</div>
         <div style="font-size: 11px; color: var(--text-muted);">Send to friend/status</div>
@@ -337,7 +337,7 @@ function openShareModal(photocard) {
 
     <!-- Twitter / X Intent -->
     <a href="https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}" target="_blank" rel="noopener noreferrer" class="share-option">
-      <div class="share-option-icon twitter">🐦</div>
+      <div class="share-option-icon">${icon('twitter', 20)}</div>
       <div>
         <div class="share-option-name">Twitter / X</div>
         <div style="font-size: 11px; color: var(--text-muted);">Post a tweet</div>
@@ -346,7 +346,7 @@ function openShareModal(photocard) {
 
     <!-- Facebook Intent -->
     <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener noreferrer" class="share-option">
-      <div class="share-option-icon facebook">📘</div>
+      <div class="share-option-icon">${icon('facebook', 20)}</div>
       <div>
         <div class="share-option-name">Facebook</div>
         <div style="font-size: 11px; color: var(--text-muted);">Share to timeline</div>

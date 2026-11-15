@@ -79,7 +79,7 @@ export function createEditorPage(data = {}) {
       </button>
       <div style="display: flex; align-items: center; gap: var(--space-2);">
         <span class="editor-title">Studio Editor</span>
-        <span class="badge">${config.icon} ${config.label}</span>
+        <span class="badge" style="gap: 6px;">${icon(config.iconName || 'camera', 14)} <span>${config.label}</span></span>
       </div>
       <button class="btn btn-primary btn-sm" id="btn-done">
         ${icon('check', 18)}

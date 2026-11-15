@@ -39,7 +39,7 @@ export function createHomePage() {
       <div class="mode-selector" id="mode-selector">
         ${Object.entries(CAPTURE_CONFIG).map(([mode, config]) => `
           <div class="mode-option ${mode === selectedMode ? 'active' : ''}" data-mode="${mode}">
-            <div class="mode-icon">${config.icon}</div>
+            <div class="mode-icon">${icon(config.iconName || 'camera', 24)}</div>
             <div class="mode-text">
               <div class="mode-label">${config.label}</div>
               <div class="mode-desc">${config.desc}</div>
